@@ -2,6 +2,7 @@ pragma solidity >=0.4.25 <0.7.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract MetaSwap {
   using ECDSA for bytes32;
@@ -61,20 +62,20 @@ contract MetaSwap {
     }
     return true;
   }
-  // withdrawing
   function withdraw(address asset, uint amount) public frozen returns (bool success) {
     require(balances[msg.sender][asset] >= amount, 'not enough balance');
     if (asset == address(0)) {
       msg.sender.transfer(amount);
-      return true;
+    } else {
+      ERC20(asset).transfer(msg.sender, amount);
     }
-    // TODO ERC20s
-    return false;
+    return true;
   }
-  // depositing (0x0 = Coin)
-  // approve(address,uint256)
-  // and
-  // transferFrom(address,address,uint256)
+  function depositToken(address asset, uint value) public returns (bool success) {
+    ERC20(asset).transferFrom(msg.sender, address(this), value);
+    balances[msg.sender][asset] = balances[msg.sender][asset] + value;
+    return true;
+  }
   function depositEther() public payable returns (bool success) {
     balances[msg.sender][address(0)] = balances[msg.sender][address(0)] + msg.value;
     return true;
@@ -105,18 +106,18 @@ contract MetaSwap {
     require(sha256(abi.encodePacked(preImage)) == preImageHash, 'incorrect invoice');
     require(expirationBlock > block.number, 'swap expired');
     require(!completedSwaps[preImageHash], 'swap already claimed');
-
     // TODO this account's rate limiting rules (e.g. minimum balance, timelock)...
 
     // validated
     completedSwaps[preImageHash] = true;
     accountDetails[account].swapsCompleted = accountDetails[account].swapsCompleted + 1;
-
+    // update balance
+    balances[msg.sender][asset] = balances[msg.sender][asset] - amount;
     // send the funds...
     if (asset == address(0)) {
       receiver.transfer(amount);
     } else {
-      // TODO ERC20 
+      ERC20(asset).transfer(receiver, amount);
     }
     // TODO reward the relayer for publishing a valid message
     return true;
