@@ -1,0 +1,21 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^2.5.0",
+    "ethers": "^4.0.44",
+    "ganache-cli": "^6.9.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "truffle test --network development",
+    "ganache": "ganache-cli"
+  },
+  "author": "",
+  "license": "ISC"
+}
