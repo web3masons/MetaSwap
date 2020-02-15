@@ -20,6 +20,11 @@
 ## Punishment for bob
 
 * Bob has rate limiting that will burn his stash, to ensure he can't try and scam Alice without hurting himself
+* Can only spend 20% of any given asset at a time, and must do trades in series (nonces)
+* If bob breaks the rules
+  * Recipient gets their cut
+  * Replayer gets their cut
+  * 40% gets burned
 
 ## MVP Flow
 

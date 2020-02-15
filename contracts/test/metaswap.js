@@ -30,22 +30,21 @@ const waitFor = async n => {
 };
 
 function createSignature(...params) {
-  // [contract, owner, receiver, asset, amount, expirationBlock, preImageHash];
-  const types = ['address', 'address', 'address', 'address', 'uint256', 'uint256', 'bytes32'];
+  // contract, owner, receiver, asset, amount, expirationBlock, preImageHash, priorityRelayerAddress, relayerAsset, relayerAmount, priorityRelayerPriotiyExpiration
+  const types = ['address', 'uint32', 'address', 'address', 'address', 'uint256', 'uint256', 'bytes32', 'address', 'address', 'uint256', 'uint256'];
   const message = utils.solidityKeccak256(types, params);
   return wallet.signMessage(utils.arrayify(message));
-
 }
 
 contract('MetaSwap', (accounts) => {
-  describe('setup', () => {
+  describe.skip('setup', () => {
     it('should be configured correctly', async () => {
       const metaSwap = await MetaSwap.deployed();
       assert.equal(await metaSwap.claimWindowBlocks.call(), 20, "incorrect minimum block window set");
       assert.equal(await metaSwap.frozenBuffer.call(), 8, "incorrect frozenBuffer set");
     });
   })
-  describe('deposit', () => {
+  describe.skip('deposit', () => {
     let metaSwap;
     beforeEach(async () => {
       metaSwap = await MetaSwap.new();
@@ -65,32 +64,41 @@ contract('MetaSwap', (accounts) => {
     });
   })
   describe("swap", () => {
-    let metaSwap, recipient;
+    let metaSwap, recipient, currentBlock, priorityRelayerExpiry, expiration;
     beforeEach(async() => {
       recipient = randomAddress();
       metaSwap = await MetaSwap.new();
       await metaSwap.freeze();
       await waitFor(30);
       await metaSwap.configureAccount(burner, true);
-      expiration = (await web3.eth.getBlockNumber()) + 20;
+      currentBlock = await web3.eth.getBlockNumber();
+      priorityRelayerExpiry = currentBlock + 5;
+      expiration = currentBlock + 20;
     });
     it("settles valid ether swaps", async () => {
-      const value = 10;
-      await metaSwap.depositEther({ value });
+      const reward = 2;
+      const swap = 5;
+      const deposit = 200;
+      await metaSwap.depositEther({ value: deposit });
       const params = [
+        1,
         accounts[0],
         recipient,
         nullAddress,
-        value,
+        swap,
         expiration,
-        examplePreImageHash
+        examplePreImageHash,
+        accounts[1],
+        nullAddress,
+        reward,
+        priorityRelayerExpiry
       ];
       const signature = await createSignature(metaSwap.address, ...params);
-      await metaSwap.swap(...params, examplePreImage, signature);
-      assert.equal(await metaSwap.getBalance.call(accounts[0], nullAddress), 0, 'sender balance incorrect');
-      assert.equal(await web3.eth.getBalance(recipient), value, 'recipient balance incorrect');
+      await metaSwap.swap(...params, examplePreImage, signature, { from: accounts[1] });
+      assert.equal(await metaSwap.getBalance.call(accounts[0], nullAddress), deposit - swap - reward, 'sender balance incorrect');
+      assert.equal(await web3.eth.getBalance(recipient), swap, 'recipient balance incorrect');
     });
-    it("settles valid token swaps", async () => {
+    it.skip("settles valid token swaps", async () => {
       const tokens = 20;
       const erc20 = await ERC20.new(accounts[0], tokens);
       await erc20.approve(metaSwap.address, tokens);
@@ -108,6 +116,5 @@ contract('MetaSwap', (accounts) => {
       assert.equal(await metaSwap.getBalance.call(accounts[0], erc20.address), 0, 'sender balance incorrect');
       assert.equal(await erc20.balanceOf.call(recipient), tokens, 'recipient balance incorrect');
     });
-
   });
 });

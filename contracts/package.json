@@ -9,7 +9,8 @@
   "dependencies": {
     "@openzeppelin/contracts": "^2.5.0",
     "ethers": "^4.0.44",
-    "ganache-cli": "^6.9.1"
+    "ganache-cli": "^6.9.1",
+    "truffle": "^5.1.13"
   },
   "devDependencies": {},
   "scripts": {

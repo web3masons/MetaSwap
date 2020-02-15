@@ -1,5 +1,5 @@
 pragma solidity >=0.4.25 <0.7.0;
-pragma experimental ABIEncoderV2;
+// TODO events etc
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -8,11 +8,11 @@ contract MetaSwap {
   using ECDSA for bytes32;
 
   struct AccountDetails {
-      address burnerWallet;
-      uint lastFrozen;
-      bool isFrozen;
-      bool inPrison;
-      uint swapsCompleted;
+    uint32 nonce;
+    address burnerWallet;
+    uint256 lastPurgatory;
+    uint256 lastFrozen;
+    bool isFrozen;
   }
 
   mapping (address => AccountDetails) accountDetails;
@@ -21,15 +21,14 @@ contract MetaSwap {
 
   uint public constant claimWindowBlocks = 20; // 5 minutes
   uint public constant frozenBuffer = 8; // 2 minutes
+  uint public constant maximumSpendProportion = 5; // maximum spend of asset per swap
+  uint public constant purgatoryDuration = 175000; // number of blocks funds get locked if you cheat (about 1 month)
 
   function getBalance(address account, address asset) public view returns (uint value) {
     return balances[account][asset];
   }
-  function getAccountDetails(address account) public view returns (AccountDetails memory accountDetail) {
-    return accountDetails[account];
-  }
-  function signerIsAllowed(address account, address signer) public view returns (bool allowed) {
-    return signer == account || signer == accountDetails[account].burnerWallet;
+  function getBurnerWallet(address account) public view returns (address burnerWallet) {
+    return accountDetails[account].burnerWallet;
   }
   function coldEnoughBlock(address account) public view returns (uint blocknumber) {
     return accountDetails[account].lastFrozen + claimWindowBlocks + frozenBuffer;
@@ -41,7 +40,6 @@ contract MetaSwap {
     return true;
   }
   modifier frozen {
-    // TODO use safe math
     require(isColdEnough(msg.sender), 'not cold enough; freeze and/or wait a bit');
     _;
   }
@@ -54,6 +52,12 @@ contract MetaSwap {
     accountDetails[msg.sender].isFrozen = false;
     return true;
   }
+  function notInPurgatory(address account) public view returns (bool) {
+    if (accountDetails[account].lastPurgatory == 0) {
+      return true;
+    }
+    return (block.number - accountDetails[account].lastPurgatory) > purgatoryDuration;
+  }
   // update settings for this account
   function configureAccount(address burnerWallet, bool done) public frozen returns (bool success) {
     accountDetails[msg.sender].burnerWallet = burnerWallet;
@@ -63,6 +67,7 @@ contract MetaSwap {
     return true;
   }
   function withdraw(address asset, uint amount) public frozen returns (bool success) {
+    require(notInPurgatory(msg.sender), 'you are in purgatory!');
     require(balances[msg.sender][asset] >= amount, 'not enough balance');
     if (asset == address(0)) {
       msg.sender.transfer(amount);
@@ -80,46 +85,106 @@ contract MetaSwap {
     balances[msg.sender][address(0)] = balances[msg.sender][address(0)] + msg.value;
     return true;
   }
+
+  function signatureIsValid(address account, bytes memory signature, bytes32 swapHash) private view returns (bool success) {
+    address signer = swapHash.toEthSignedMessageHash().recover(signature);
+    if (signer == address(0)) {
+      return false;
+    }
+    return signer == account || signer == accountDetails[account].burnerWallet;
+  }
+
+  function transferFunds(address from, address payable to, address asset, uint amount) private returns (bool success) {
+    balances[from][asset] = balances[from][asset] - amount;
+    if (asset == address(0)) {
+      to.transfer(amount);
+    } else {
+      ERC20(asset).transfer(to, amount);
+    }
+    return true;
+  }
+
+  function calculateMaxSpend(address account, address asset) public view returns (uint maxSpend) {
+    return balances[account][asset] / maximumSpendProportion;
+  }
+
+  function isCheating(
+    uint32 nonce,
+    address account,
+    address asset,
+    uint amount,
+    address relayerAsset,
+    uint relayerAmount
+  ) private returns (bool) {
+    bool cheating = false;
+    uint maxSpend = calculateMaxSpend(account, asset);
+    uint relayMaxSpend = calculateMaxSpend(account, relayerAsset);
+    // if the nonce is invalid (trying to double spend)
+    if (nonce != accountDetails[account].nonce + 1) {
+      cheating = true;
+    }
+    // trying to spend too much
+    if (maxSpend < amount) {
+      cheating = true;
+    }
+    // trying to spend too much
+    if (relayMaxSpend < relayerAmount) {
+      cheating = true;
+    }
+    // punish!
+    if (cheating) {
+      accountDetails[account].lastPurgatory = block.number;
+      transferFunds(account, address(0xdeadbeef), asset, maxSpend);
+      transferFunds(account, address(0xdeadbeef), relayerAsset, relayMaxSpend);
+    }
+    return cheating;
+  }
+
 	function swap(
+    uint32 nonce,
     address account,
     address payable receiver,
     address asset,
     uint256 amount,
     uint256 expirationBlock,
     bytes32 preImageHash,
+    address payable relayerAddress,
+    address relayerAsset,
+    uint256 relayerAmount,
+    uint256 relayerExpirationBlock,
     bytes32 preImage,
     bytes memory signature
-  ) public returns(bool success) {
-    // validate the metatransaction
-    bytes memory blob = abi.encodePacked(
+  ) public {
+    bytes32 swapHash = keccak256(abi.encodePacked(
       address(this),
+      nonce,
       account,
       receiver,
       asset,
       amount,
       expirationBlock,
-      preImageHash
-    );
-    address signer = keccak256(blob).toEthSignedMessageHash().recover(signature);
-    require(signer != address(0) && signerIsAllowed(account, signer), 'invalid signature');
-    // now validate the swap itself
-    require(sha256(abi.encodePacked(preImage)) == preImageHash, 'incorrect invoice');
-    require(expirationBlock > block.number, 'swap expired');
-    require(!completedSwaps[preImageHash], 'swap already claimed');
-    // TODO this account's rate limiting rules (e.g. minimum balance, timelock)...
-
-    // validated
-    completedSwaps[preImageHash] = true;
-    accountDetails[account].swapsCompleted = accountDetails[account].swapsCompleted + 1;
-    // update balance
-    balances[msg.sender][asset] = balances[msg.sender][asset] - amount;
-    // send the funds...
-    if (asset == address(0)) {
-      receiver.transfer(amount);
-    } else {
-      ERC20(asset).transfer(receiver, amount);
+      preImageHash,
+      relayerAddress,
+      relayerAsset,
+      relayerAmount,
+      relayerExpirationBlock
+    ));
+    require(completedSwaps[swapHash] != true, 'swap is already claimed');
+    require(expirationBlock > block.number, 'swap os expired');
+    require(notInPurgatory(account), 'account is in purgatory');
+    require(signatureIsValid(account, signature, swapHash), 'invalid signature');
+    // check if cheating
+    if (isCheating(nonce, account, asset, amount, relayerAsset, relayerAmount)) {
+      return;
     }
-    // TODO reward the relayer for publishing a valid message
-    return true;
+    // give priority to relayer if within deadline
+    require(relayerExpirationBlock > block.number || msg.sender == relayerAddress, 'not priority relayer');
+    require(sha256(abi.encodePacked(preImage)) == preImageHash, 'incorrect invoice');
+    // validated!
+    accountDetails[account].nonce = nonce;
+    completedSwaps[swapHash] = true;
+    transferFunds(account, relayerAddress, relayerAsset, relayerAmount);
+    transferFunds(account, receiver, asset, amount);
+    return;
   }
 }
