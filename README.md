@@ -28,24 +28,34 @@
 
 ## MVP Flow
 
-### Alice UX
+### Lightning UX
 
 * Get link from Bob
 * She enters a deposit address (pasted)
 * Shows swap details offered by Bob incl. LN invoice (all verified by her UI)
 * She makes the payment and pastes in the preimage
 
-### Bob UX
+### Burner UX
 
-* Managing Funds
-  * Withdraw
-  * Deposit
-  * Set Burner Wallet
 * Create new swap offer
   * Options to configure a new swap
     * Coin, price, amount
     * He pastes in a LN invoice
   * Generates a link/qr to share with alice
+  * Lightning Swap
+    * Paste in the invoice
+  * EVM Token Swap 
+    * Generate a PreImage
+
+### Funding Account Setup
+
+* Account management
+  * Mnemonic / JSON / Private Key (ethers.js)
+  * Web3 Metamask (vNext)
+* Managing Funds
+  * Withdraw
+  * Deposit
+  * Set Burner Wallet
 
 ## Future Flows (v1)
 
