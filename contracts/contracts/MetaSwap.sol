@@ -1,5 +1,7 @@
-pragma solidity >=0.4.25 <0.7.0;
+pragma solidity 0.5.16;
+
 // TODO events etc
+// TODO better naming converion
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -10,13 +12,13 @@ contract MetaSwap {
   struct AccountDetails {
     uint32 nonce;
     address burnerWallet;
-    uint256 lastPurgatory;
-    uint256 lastFrozen;
+    uint lastPurgatory;
+    uint lastFrozen;
     bool isFrozen;
   }
 
   mapping (address => AccountDetails) accountDetails;
-  mapping (address => mapping (address => uint256)) balances;
+  mapping (address => mapping (address => uint)) balances;
   mapping (bytes32 => bool) completedSwaps;
 
   uint public constant claimWindowBlocks = 20; // 5 minutes
@@ -24,12 +26,35 @@ contract MetaSwap {
   uint public constant maximumSpendProportion = 5; // maximum spend of asset per swap
   uint public constant purgatoryDuration = 175000; // number of blocks funds get locked if you cheat (about 1 month)
 
+  
+  modifier frozen {
+    require(isColdEnough(msg.sender), 'not cold enough; freeze and/or wait a bit');
+    _;
+  }
+
+
   function getBalance(address account, address asset) public view returns (uint value) {
     return balances[account][asset];
   }
-  function getBurnerWallet(address account) public view returns (address burnerWallet) {
-    return accountDetails[account].burnerWallet;
+
+  function getAccountDetails(address account) public view returns (
+    uint32 nonce,
+    address burnerWallet,
+    uint lastPurgatory,
+    uint lastFrozen,
+    bool isFrozen,
+    uint coldBlock
+  ) {
+    return (
+      accountDetails[account].nonce,
+      accountDetails[account].burnerWallet,
+      accountDetails[account].lastPurgatory,
+      accountDetails[account].lastFrozen,
+      accountDetails[account].isFrozen,
+      coldEnoughBlock(account)
+    );
   }
+
   function coldEnoughBlock(address account) public view returns (uint blocknumber) {
     return accountDetails[account].lastFrozen + claimWindowBlocks + frozenBuffer;
   }
@@ -39,10 +64,7 @@ contract MetaSwap {
     require(block.number > coldEnoughBlock(account), 'not frozen for long enough');
     return true;
   }
-  modifier frozen {
-    require(isColdEnough(msg.sender), 'not cold enough; freeze and/or wait a bit');
-    _;
-  }
+
   function freeze() public returns (bool success) {
     accountDetails[msg.sender].lastFrozen = block.number;
     accountDetails[msg.sender].isFrozen = true;
@@ -145,13 +167,13 @@ contract MetaSwap {
     address account,
     address payable receiver,
     address asset,
-    uint256 amount,
-    uint256 expirationBlock,
+    uint amount,
+    uint expirationBlock,
     bytes32 preImageHash,
     address payable relayerAddress,
     address relayerAsset,
-    uint256 relayerAmount,
-    uint256 relayerExpirationBlock,
+    uint relayerAmount,
+    uint relayerExpirationBlock,
     bytes32 preImage,
     bytes memory signature
   ) public {

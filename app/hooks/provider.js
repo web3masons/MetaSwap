@@ -1,67 +1,78 @@
-import { useReducer, useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 import { ethers } from 'ethers'
-import { mergeDeep } from '../utils/misc'
-
-function reducer (state = {}, { type, payload }) {
-  console.log(`>> ${type}`, payload)
-  switch (type) {
-    case 'merge':
-      return mergeDeep(state, payload)
-    case 'provider':
-      return {
-        ...state,
-        provider: payload,
-        balance: {}
-      }
-    default:
-      throw new Error()
-  }
-}
+import { useMyReducer, parseCall } from '../utils'
 
 export default function useProvider ({ chain, secret }) {
-  const [state, dispatch] = useReducer(reducer)
+  const [state, { merge, set }] = useMyReducer()
 
   const provider = useRef(null)
   const wallet = useRef(null)
 
   useEffect(() => {
     if (!provider.current && chain) {
-      setProvider(chain)
+      actions.setProvider(chain)
     }
     if (provider.current && !wallet.current && secret) {
-      setWallet(secret)
+      actions.setWallet(secret)
     }
   }, [chain, secret])
 
-  function merge (payload) {
-    dispatch({ type: 'merge', payload })
-  }
+  const actions = {
+    getProvider () {
+      return wallet || provider
+    },
 
-  function setProvider (chain) {
-    provider.current = new ethers.providers.JsonRpcProvider(chain.url)
-    if (wallet.current) {
-      wallet.current.connect(provider.current)
+    async setProvider (chain) {
+      console.log(chain)
+      provider.current = new ethers.providers.JsonRpcProvider(chain.url)
+      set(chain)
+      if (wallet.current) {
+        actions.setWallet(wallet.current.privateKey)
+      }
+      actions.getBlock()
+    },
+
+    setWallet (secret) {
+      try {
+        wallet.current = new ethers.Wallet(secret, provider.current)
+        merge({ wallet: wallet.current.address })
+        actions.getBalance(wallet.current.address)
+      } catch (e) {
+        console.log(e)
+        return null
+      }
+    },
+
+    async getBalance (address = state.wallet) {
+      const payload = (await provider.current.getBalance(address)).toString()
+      merge({ balance: { [address]: payload } })
+    },
+
+    async getBlockNumber () {
+      const blockNumber = await provider.current.getBlockNumber()
+      merge({ blockNumber: blockNumber.toString() })
+      return blockNumber
+    },
+
+    async getBlock (_hashOrNumber) {
+      const hashOrNumber = _hashOrNumber || await actions.getBlockNumber()
+      const block = await provider.current.getBlock(hashOrNumber)
+      merge({ block: { [block.hash]: parseCall(block) } })
+    },
+
+    async getTransaction (hash) {
+      const tx = await provider.current.getTransaction(hash)
+      merge({ tx: { [hash]: parseCall(tx) } })
+    },
+
+    async getTransactionReceipt (hash) {
+      const receipt = await provider.current.getTransactionReceipt(hash)
+      merge({ tx: { [hash]: { receipt: parseCall(receipt) } } })
     }
-    dispatch({ type: 'provider', payload: provider.current.connection.url })
   }
 
-  function setWallet (secret) {
-    if (!provider.current) {
-      throw new Error('Provider not set')
-    }
-    try {
-      wallet.current = new ethers.Wallet(secret, provider.current)
-      merge({ wallet: wallet.current.address })
-      getBalance(wallet.current.address)
-    } catch (e) {
-      return null
-    }
+  return {
+    ...state,
+    ...actions
   }
-
-  async function getBalance (address) {
-    const payload = (await provider.current.getBalance(address)).toString()
-    merge({ balance: { [address]: payload } })
-  }
-
-  return [state, { setProvider, setWallet, getBalance }, provider.current]
 }
