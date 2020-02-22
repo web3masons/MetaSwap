@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { ethers } from 'ethers'
-import { useMyReducer, parseCall } from '../utils'
+import { useMyReducer, parseCall, parseTx } from '../utils'
 
 export default function useProvider ({ chain, secret }) {
   const [state, { merge, set }] = useMyReducer()
@@ -18,12 +18,23 @@ export default function useProvider ({ chain, secret }) {
   }, [chain, secret])
 
   const actions = {
+    async tx (promise, skipMining) {
+      // TODO handle errors
+      const tx = await promise
+      merge({ txs: { [tx.hash]: parseTx(tx) } })
+      const wait = async () => {
+        await tx.wait()
+        merge({ txs: { [tx.hash]: { mined: true } } })
+      }
+      skipMining ? wait() : await wait()
+      return tx
+    },
+
     getProvider () {
       return wallet || provider
     },
 
-    async setProvider (chain) {
-      console.log(chain)
+    setProvider (chain) {
       provider.current = new ethers.providers.JsonRpcProvider(chain.url)
       set(chain)
       if (wallet.current) {
@@ -44,8 +55,8 @@ export default function useProvider ({ chain, secret }) {
     },
 
     async getBalance (address = state.wallet) {
-      const payload = (await provider.current.getBalance(address)).toString()
-      merge({ balance: { [address]: payload } })
+      const balance = (await provider.current.getBalance(address)).toString()
+      merge({ balance: { [address]: balance } })
     },
 
     async getBlockNumber () {
@@ -61,13 +72,17 @@ export default function useProvider ({ chain, secret }) {
     },
 
     async getTransaction (hash) {
-      const tx = await provider.current.getTransaction(hash)
-      merge({ tx: { [hash]: parseCall(tx) } })
+      actions.tx(provider.current.getTransaction(hash))
     },
 
     async getTransactionReceipt (hash) {
       const receipt = await provider.current.getTransactionReceipt(hash)
-      merge({ tx: { [hash]: { receipt: parseCall(receipt) } } })
+      merge({ txs: { [hash]: { receipt: parseCall(receipt) } } })
+    },
+
+    async increaseTime (seconds) {
+      await provider.current.send('evm_increaseTime', [seconds])
+      await provider.current.send('evm_mine')
     }
   }
 

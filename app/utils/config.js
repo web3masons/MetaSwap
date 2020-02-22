@@ -1,12 +1,15 @@
-import artifacts from '../../contracts/build/contracts/MetaSwap'
-const { address } = Object.values(artifacts.networks).pop()
+import metaSwap from '../../contracts/build/contracts/MetaSwap'
+import erc20Mock from '../../contracts/build/contracts/ERC20Mock'
+const { address: contractAddress } = Object.values(metaSwap.networks).pop()
+const { address: tokenAddress } = Object.values(erc20Mock.networks).pop()
 
 export const chains = {
   test: {
     key: 'test',
     name: 'Ganache',
     url: 'http://localhost:8545',
-    address
+    contractAddress,
+    tokenAddress
   },
   etc: {
     key: 'etc',
@@ -16,7 +19,7 @@ export const chains = {
   eth: {
     key: 'eth',
     name: 'Ethereum',
-    url: 'https://mainnet.infura.io'
+    url: 'https://api.mycryptoapi.com/eth'
   },
   rsk: {
     key: 'rsk',

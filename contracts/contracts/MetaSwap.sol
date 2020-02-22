@@ -13,9 +13,9 @@ contract MetaSwap {
 
   struct AccountDetails {
     uint nonce;
-    address burnerWallet;
+    address signerWallet;
     uint cooldownStart;
-    bool coolingDown;
+    bool warmupTriggered;
   }
 
   mapping (address => AccountDetails) _accountDetails;
@@ -23,8 +23,8 @@ contract MetaSwap {
   mapping (bytes32 => bool) _completedSwaps;
   mapping (bytes32 => bytes32) _revealedHashes;
 
-  uint constant _claimWindow = 20; // 5 minutes
-  uint constant _cooldownBuffer = 8; // 2 minutes
+  uint constant _claimWindow = 5 * 60; // 5 minutes
+  uint constant _cooldownBuffer = 2 * 60; // 2 minutes
   uint constant _maximumSpend = 5; // maximum spend of asset per swap (balance / maximumSpend)
   address constant _etherAddress = address(0);
   address payable constant _burnAddress = address(0xbad);
@@ -52,32 +52,32 @@ contract MetaSwap {
 
   function getAccountDetails(address _account) public view returns (
     uint nonce,
-    address burnerWallet,
+    address signerWallet,
     uint cooldownStart,
-    bool coolingDown,
-    uint frozenBlock
+    bool warmupTriggered,
+    uint frozenTime,
+    bool isFrozen
   ) {
     return (
       _accountDetails[_account].nonce,
-      _accountDetails[_account].burnerWallet,
+      _accountDetails[_account].signerWallet,
       _accountDetails[_account].cooldownStart,
-      _accountDetails[_account].coolingDown,
-      getFrozenBlockNumber(_account)
+      _accountDetails[_account].warmupTriggered,
+      getFrozenTime(_account),
+      getIsFrozen(_account)
     );
   }
 
-  function getBalance(address _account, address _asset) public view returns (uint balance) {
+  function getBalance(address _asset, address _account) public view returns (uint balance) {
     return _balances[_account][_asset];
   }
 
-  function getFrozenBlockNumber(address _account) public view returns (uint frozenBlockNumber) {
+  function getFrozenTime(address _account) public view returns (uint frozenBlockNumber) {
     return _accountDetails[_account].cooldownStart + _claimWindow + _cooldownBuffer;
   }
 
   function getIsFrozen(address _account) public view returns (bool isFrozen) {
-    require(_accountDetails[_account].coolingDown, 'not cooling down');
-    require(block.number > getFrozenBlockNumber(_account), 'not cooling down for long enough');
-    return true;
+    return !_accountDetails[_account].warmupTriggered && block.timestamp > getFrozenTime(_account);
   }
 
   function getSignatureIsValid(address _account, bytes memory _signature, bytes32 _messageHash) public view returns (bool signatureIsValid) {
@@ -85,7 +85,7 @@ contract MetaSwap {
     if (signer == address(0)) {
       return false;
     }
-    return signer == _account || signer == _accountDetails[_account].burnerWallet;
+    return signer == _account || signer == _accountDetails[_account].signerWallet;
   }
 
   function getMaxSpend(address _account, address _asset) public view returns (uint maxSpend) {
@@ -115,18 +115,18 @@ contract MetaSwap {
   }
 
   function cooldown() public returns (bool success) {
-    _accountDetails[msg.sender].cooldownStart = block.number;
-    _accountDetails[msg.sender].coolingDown = true;
+    _accountDetails[msg.sender].cooldownStart = block.timestamp;
+    _accountDetails[msg.sender].warmupTriggered = false;
     return true;
   }
 
   function warmUp() public frozen returns (bool success) {
-    _accountDetails[msg.sender].coolingDown = false;
+    _accountDetails[msg.sender].warmupTriggered = true;
     return true;
   }
 
-  function configureAccount(address _burnerWallet, bool _done) public frozen returns (bool success) {
-    _accountDetails[msg.sender].burnerWallet = _burnerWallet;
+  function configureAccount(address _signerWallet, bool _done) public frozen returns (bool success) {
+    _accountDetails[msg.sender].signerWallet = _signerWallet;
     if (_done) {
       warmUp();
     }
@@ -134,19 +134,13 @@ contract MetaSwap {
   }
 
   function withdraw(address _asset, uint _amount) public frozen returns (bool success) {
-    require(_balances[msg.sender][_asset] >= _amount, 'not enough balance');
-    if (_asset == _etherAddress) {
-      msg.sender.transfer(_amount);
-    } else {
-      ERC20(_asset).transfer(msg.sender, _amount);
-    }
-    return true;
+    return transferFunds(msg.sender, msg.sender, _asset, _amount);
   }
 
-  function depositToken(address _asset, uint _value) public returns (bool success) {
+  function depositToken(address _asset, uint _amount) public returns (bool success) {
     // todo safe match etc
-    ERC20(_asset).transferFrom(msg.sender, address(this), _value);
-    _balances[msg.sender][_asset] = _balances[msg.sender][_asset] + _value;
+    ERC20(_asset).transferFrom(msg.sender, address(this), _amount);
+    _balances[msg.sender][_asset] = _balances[msg.sender][_asset] + _amount;
     return true;
   }
 
@@ -193,8 +187,8 @@ contract MetaSwap {
     if (punish) {
       // TODO insert a more clever punishemnent system
       transferFunds(_addressVals[0], _burnAddress, address(uint160(_addressVals[3])), relayMaxSpend);
-      transferFunds(_addressVals[0], _burnAddress, _addressVals[2], getBalance(_addressVals[0],_addressVals[2]));
-      transferFunds(_addressVals[0], _burnAddress, _addressVals[4], getBalance(_addressVals[0],_addressVals[4]));
+      transferFunds(_addressVals[0], _burnAddress, _addressVals[2], getBalance(_addressVals[2],_addressVals[0]));
+      transferFunds(_addressVals[0], _burnAddress, _addressVals[4], getBalance(_addressVals[4],_addressVals[0]));
     }
     return punish;
   }
@@ -207,12 +201,12 @@ contract MetaSwap {
     bytes memory _signature
   ) private returns (bool success) {
     require(_completedSwaps[_messageHash] != true, 'swap is already claimed');
-    require(_uintVals[2] > block.number, 'swap os expired');
+    require(_uintVals[2] > block.timestamp, 'swap os expired');
     require(getSignatureIsValid(_addressVals[0], _signature, _messageHash), 'invalid signature');
     if (punishDishonest(_addressVals, _uintVals)) {
       return false;
     }
-    require(_uintVals[4] > block.number || msg.sender == _addressVals[3], 'not priority relayer');
+    require(_uintVals[4] > block.timestamp || msg.sender == _addressVals[3], 'not priority relayer');
     require(sha256(abi.encodePacked(_bytes32Vals[1])) == _bytes32Vals[0], 'incorrect invoice');
     return true;
   }

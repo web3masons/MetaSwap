@@ -10,7 +10,7 @@ export function parseTx (tx) {
     value: tx.value.toString(),
     gasPrice: tx.gasPrice.toString(),
     gasLimit: tx.gasLimit.toString(),
-    published: new Date().getTime()
+    _lastSeen: new Date().getTime()
   }
 }
 
@@ -26,7 +26,7 @@ export function parseCall (res) {
       }
     }
   })
-  return { ...parsed, updated: new Date().getTime() }
+  return { ...parsed, _lastSeen: new Date().getTime() }
 }
 
 export function mergeDeep (target, source) {

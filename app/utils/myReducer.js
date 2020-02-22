@@ -6,6 +6,8 @@ function reducer (state = {}, { type, payload }) {
   switch (type) {
     case 'set':
       return payload
+    case 'push':
+      return { ...state, [payload.key]: [...(state[payload.key] || []), payload.value] }
     case 'merge':
       return mergeDeep(state, payload)
     default:
@@ -19,9 +21,12 @@ export default function useMyReducer () {
   function set (payload) {
     dispatch({ type: 'set', payload })
   }
+  function push (key, value) {
+    dispatch({ type: 'push', payload: { key, value } })
+  }
   function merge (payload) {
     dispatch({ type: 'merge', payload })
   }
 
-  return [state, { merge, set }]
+  return [state, { merge, set, push }]
 };

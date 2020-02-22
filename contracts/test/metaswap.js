@@ -121,7 +121,7 @@ contract('MetaSwap', (accounts) => {
       await metaSwap.depositEther({ value: deposit });
       const methodParams = await formatParams(params);
       await metaSwap.swap(...methodParams, { from: params.relayerAddress });
-      assert.equal(await metaSwap.getBalance.call(params.account, params.asset), expectedBalance, 'sender balance incorrect');
+      assert.equal(await metaSwap.getBalance.call(params.asset, params.account), expectedBalance, 'sender balance incorrect');
       assert.equal(await web3.eth.getBalance(params.receiver), params.amount, 'recipient balance incorrect');
     });
     it("settles valid token swaps", async () => {
@@ -134,7 +134,7 @@ contract('MetaSwap', (accounts) => {
       params.relayerAsset = erc20.address;
       const methodParams = await formatParams(params);
       await metaSwap.swap(...methodParams, { from: params.relayerAddress });
-      assert.equal(await metaSwap.getBalance.call(params.account, params.asset), expectedBalance, 'sender balance incorrect');
+      assert.equal(await metaSwap.getBalance.call(params.asset, params.account), expectedBalance, 'sender balance incorrect');
       assert.equal(await erc20.balanceOf.call(params.receiver), params.amount, 'recipient balance incorrect');
     });
   });
