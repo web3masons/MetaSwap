@@ -1,5 +1,11 @@
 import crypto from 'crypto'
+import generate from 'nanoid/generate'
 import { Wallet } from 'ethers'
+
+export const isClient =
+  typeof window !== 'undefined' &&
+  window.document &&
+  window.document.createElement
 
 export const nullAddress = '0x0000000000000000000000000000000000000000'
 export const testAddress = '0x0000000000000000000000000000000000000b0b'
@@ -10,8 +16,14 @@ export const ganacheAccount = '0x6f362b01031d9cd0a650bfb8c8d5d541c322bbc8e565d18
 export const alice = new Wallet('0x0000000000000000000000000000000000000000000000000000000000000002')
 export const bob = new Wallet('0x0000000000000000000000000000000000000000000000000000000000000001')
 
-export function randomAddress (n = 20) {
-  return `0x${crypto.randomBytes(n).toString('hex')}`
+export function randomId (n = 8) {
+  return generate('2346789ABCDEFGHJKLMNPQRTUVWXYZabcdefghijkmnpqrtwxyz', n)
+}
+export function randomHex (n = 8) {
+  return crypto.randomBytes(n).toString('hex').slice(0, n)
+}
+export function randomAddress () {
+  return `0x${randomHex(40)}`
 }
 
 export function parseTx (tx) {

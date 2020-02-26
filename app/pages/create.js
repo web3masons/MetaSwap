@@ -1,5 +1,5 @@
-import CreateSwap from '../components/CreateSwap'
+import MakeSwap from '../components/MakeSwap'
 
-const Create = () => <CreateSwap />
+const Create = () => <MakeSwap />
 
 export default Create
