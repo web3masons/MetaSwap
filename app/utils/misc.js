@@ -1,4 +1,18 @@
+import crypto from 'crypto'
+import { Wallet } from 'ethers'
+
 export const nullAddress = '0x0000000000000000000000000000000000000000'
+export const testAddress = '0x0000000000000000000000000000000000000b0b'
+export const testTxHash = '0x0783297c83784d26ea1d134619b5122f49b96057abf3a117f0365ed875bf4a1b'
+// EDIT THIS
+export const ganacheAccount = '0x6f362b01031d9cd0a650bfb8c8d5d541c322bbc8e565d18a19d69243ce897aaf'
+
+export const alice = new Wallet('0x0000000000000000000000000000000000000000000000000000000000000002')
+export const bob = new Wallet('0x0000000000000000000000000000000000000000000000000000000000000001')
+
+export function randomAddress (n = 20) {
+  return `0x${crypto.randomBytes(n).toString('hex')}`
+}
 
 export function parseTx (tx) {
   return {

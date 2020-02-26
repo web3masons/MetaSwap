@@ -1,4 +1,4 @@
-import { mergeDeep } from './misc'
+import { mergeDeep } from '../utils'
 import { useReducer } from 'react'
 
 function reducer (state = {}, { type, payload }) {

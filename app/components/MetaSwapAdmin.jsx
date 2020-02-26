@@ -1,27 +1,24 @@
-import { useProvider, useMetaSwap, useErc20 } from '../hooks'
-import { chains } from '../utils'
+import { useEffect } from 'react'
+
+import { useContractSuite } from '../hooks'
+import { testAddress, nullAddress } from '../utils'
 
 import SelectWallet from './SelectWallet'
 import SelectChain from './SelectChain'
-import { useEffect } from 'react'
-
-const chain = Object.values(chains).slice(0, 1)[0]
-
-const secret = '0x6f362b01031d9cd0a650bfb8c8d5d541c322bbc8e565d18a19d69243ce897aaf'
-const txHash = '0x0783297c83784d26ea1d134619b5122f49b96057abf3a117f0365ed875bf4a1b'
-const signer = '0x0000000000000000000000000000000000000b0b'
 
 const MetaSwapAdmin = () => {
-  const provider = useProvider({ secret, chain })
-  const metaSwap = useMetaSwap({ provider, address: provider.contractAddress })
-  const erc20 = useErc20({ provider, address: provider.tokenAddress })
+  const { metaSwap, provider, erc20, signer } = useContractSuite()
 
   useEffect(() => {
     if (metaSwap.address && erc20.address) {
-      metaSwap.getBalance()
-      metaSwap.getBalance(erc20.address)
-      metaSwap.getAccountDetails()
-      metaSwap.getContractDetails()
+      (async () => {
+        await Promise.all([
+          metaSwap.getBalance(),
+          metaSwap.getBalance(erc20.address),
+          metaSwap.getAccountDetails(),
+          metaSwap.getContractDetails()
+        ])
+      })()
     }
   }, [metaSwap.address, erc20.address])
 
@@ -29,6 +26,19 @@ const MetaSwapAdmin = () => {
     <>
       <SelectWallet onChange={provider.setWallet} />
       <SelectChain onChange={provider.setProvider} />
+      <hr/>
+      Main:
+      <button onClick={() => {
+        metaSwap.getBalance()
+        metaSwap.getBalance(erc20.address)
+        metaSwap.getBalance(nullAddress, testAddress)
+        metaSwap.getBalance(erc20.address, testAddress)
+        provider.getBalance(testAddress)
+        erc20.balanceOf()
+        erc20.balanceOf(testAddress)
+        metaSwap.getAccountDetails()
+        metaSwap.getContractDetails()
+      }}>Update Many</button>
       <hr />
       Chain:
       <button onClick={() => provider.getBlock()}>Block</button>
@@ -44,7 +54,7 @@ const MetaSwapAdmin = () => {
       <button onClick={() => metaSwap.getBalance(provider.tokenAddress)}>Token Balance</button>
       <hr />
       Account:
-      <button onClick={() => metaSwap.configureAccount(signer, true)}>Configure Account</button>
+      <button onClick={() => metaSwap.configureAccount(signer.address)}>Configure Account</button>
       <button onClick={() => metaSwap.cooldown()}>Cool Down</button>
       <button onClick={() => metaSwap.warmUp()}>Warm Up</button>
       ||
@@ -55,7 +65,7 @@ const MetaSwapAdmin = () => {
       <button onClick={() => metaSwap.withdraw(2, erc20)}>Withdraw Tokens</button>
       <hr/>
       Relay:
-      <button disabled onClick={() => metaSwap.swap()}>Relay Swap</button>
+      <button onClick={() => metaSwap.swap(signer, erc20.address)}>Relay Swap</button>
       <hr />
       <pre>{JSON.stringify({ erc20, metaSwap, provider }, null, 2)}</pre>
     </>

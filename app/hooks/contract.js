@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { ethers } from 'ethers'
-import { useMyReducer } from '../utils'
+import { useMyReducer } from '../hooks'
 
 export default function useContract ({ provider, address, abi }) {
   const [state, actions] = useMyReducer()
