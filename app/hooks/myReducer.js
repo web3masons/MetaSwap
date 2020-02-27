@@ -16,7 +16,7 @@ function reducer (state = {}, { type, payload }) {
 }
 
 export default function useMyReducer () {
-  const [state, dispatch] = useReducer(reducer)
+  const [state = {}, dispatch] = useReducer(reducer)
 
   function set (payload) {
     dispatch({ type: 'set', payload })

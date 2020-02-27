@@ -8,24 +8,31 @@ const { Peer } = isClient && require('peerjs').peerjs
 
 const peerConfig = { debug: 0, host: 'localhost', port: 3000, path: '/rtc' }
 
-export default function ({ signer, host, channelId }) {
-  // with state or reducer
+export default function ({ signer, host, channelId, onConnect, connect = true }) {
   const [state, { merge, set }] = useMyReducer()
 
   const peer = useRef(null)
   const conn = useRef(null)
   const sharedSecret = useRef(null)
+  const q = useRef([])
+
+  const handlers = useRef({
+    onData: () => {},
+    onConnect: () => {}
+  })
 
   useEffect(() => {
-    if (host) {
-      createChannel()
-    } else if (channelId) {
-      connectToChannel()
+    if (connect) {
+      if (host) {
+        createChannel()
+      } else if (channelId) {
+        connectToChannel()
+      }
     }
     return () => {
       peer.current && peer.current.destroy()
     }
-  }, [host, channelId])
+  }, [connect, host, channelId])
 
   function createChannel () {
     const generatedId = randomId()
@@ -51,15 +58,19 @@ export default function ({ signer, host, channelId }) {
     }
     conn.current = connection
     conn.current.on('error', console.error)
-    conn.current.on('open', info => {
+    conn.current.on('open', (info) => {
       const { peer } = conn.current
       merge({ peerId: peer, connected: true })
-      conn.current.send({ pubKey: signer.signingKey.publicKey })
+      setTimeout(() => {
+        conn.current.send({ pubKey: signer.signingKey.publicKey })
+      }, 1000)
       conn.current.on('data', data => {
         if (data.pubKey) {
           createSharedSecret(data.pubKey)
-        } else {
+        } else if (sharedSecret.current) {
           handleReceiveMessage(decrypt(data))
+        } else {
+          q.current.push(data)
         }
       })
     })
@@ -69,12 +80,19 @@ export default function ({ signer, host, channelId }) {
     const peerAddress = utils.computeAddress(peerPubKey)
     sharedSecret.current = signer.signingKey.computeSharedSecret(peerPubKey)
     merge({ peerPubKey, peerAddress })
-    // TODO sign some other data to verify (e.g. block hash)
+    q.current.forEach(data => handleReceiveMessage(decrypt(data)))
+    q.current = []
     sendMessage({ ready: true })
   }
   function handleReceiveMessage (msg) {
     if (msg.ready) {
       merge({ ready: true })
+      handlers.current.onConnect()
+    } else {
+      handlers.current.onData(msg)
+      if (msg.type && handlers.current[msg.type]) {
+        handlers.current[msg.type](msg.payload)
+      }
     }
     merge({ peerLastSeen: msg._timestamp })
   }
@@ -89,5 +107,18 @@ export default function ({ signer, host, channelId }) {
     conn.current.send(encrypt({ ...msg, _timestamp: new Date().getTime() }))
   }
 
-  return { ...state }
+  const actions = {
+    send: (type, payload) => sendMessage({ type, payload }),
+    onConnect (fn) {
+      handlers.current.onConnect = fn
+    },
+    onData (fn) {
+      handlers.current.onData = fn
+    },
+    onMessage (key, fn) {
+      handlers.current[key] = fn
+    }
+  }
+
+  return { ...state, ...actions }
 }

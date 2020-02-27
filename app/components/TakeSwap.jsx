@@ -1,10 +1,10 @@
-import { usePeer } from '../hooks'
+import useLightningSwap from '../hooks/lightningSwap'
 import { bob } from '../utils'
 
 const TakeSwap = ({ channelId }) => {
-  const peer = usePeer({ signer: bob, channelId })
+  const swap = useLightningSwap({ signer: bob, channelId })
   return (
-    <pre>{JSON.stringify({ peer }, null, 2)}</pre>
+    <pre>{JSON.stringify({ swap }, null, 2)}</pre>
   )
 }
 
