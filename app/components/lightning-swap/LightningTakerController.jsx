@@ -1,10 +1,11 @@
-import { useLightningSwapTaker, useContractSuite } from '../../../../hooks'
+import { useLightningSwapTaker, useContractSuite } from '../../hooks'
 
-const LightningSwapTakeController = ({ peer }) => {
+const LightningSwapTakerController = ({ peer }) => {
   const { metaSwap, provider } = useContractSuite()
   const swap = useLightningSwapTaker({ peer, metaSwap })
   return (
     <>
+      <h3>Lightning Taker</h3>
       <pre>{JSON.stringify(swap, null, 2)}</pre>
       {(() => {
         if (!swap.recipient) {
@@ -25,4 +26,4 @@ const LightningSwapTakeController = ({ peer }) => {
   )
 }
 
-export default LightningSwapTakeController
+export default LightningSwapTakerController

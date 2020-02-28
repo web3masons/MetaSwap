@@ -1,7 +1,10 @@
-import { usePeer } from '../hooks'
-import { bob as signer } from '../utils'
-import Lightning from './swap/lightning/take/TakeController'
 import { useState } from 'react'
+
+import { usePeer } from '../hooks'
+import { bob as signer, LIGHTNING_SWAP_TYPE, EVM_SWAP_TYPE } from '../utils'
+
+import Lightning from './lightning-swap/LightningTakerController'
+import Evm from './evm-swap/EvmTakerController'
 
 const TakeSwap = ({ channelId }) => {
   const [swapType, setSwapType] = useState(null)
@@ -10,9 +13,13 @@ const TakeSwap = ({ channelId }) => {
   if (!swapType) {
     return 'Connecting...'
   }
-  if (swapType === 'lightning') {
+  if (swapType === LIGHTNING_SWAP_TYPE) {
     return <Lightning peer={peer} />
   }
+  if (swapType === EVM_SWAP_TYPE) {
+    return <Evm peer={peer} />
+  }
+
   return (
     <pre>Swap type not recognised</pre>
   )

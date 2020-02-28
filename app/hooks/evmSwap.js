@@ -1,8 +1,8 @@
 import { useMyReducer } from '../hooks'
 import { useEffect } from 'react'
-import { testAddress, testPreImage, LIGHTNING_SWAP_TYPE } from '../utils'
+import { testAddress, testPreImage, EVM_SWAP_TYPE } from '../utils'
 
-export function useLightningSwapMaker ({ peer, metaSwap, provider }) {
+export function useEvmSwapMaker ({ peer, metaSwap, provider }) {
   const [state, { merge, set }] = useMyReducer()
 
   const actions = {
@@ -24,7 +24,7 @@ export function useLightningSwapMaker ({ peer, metaSwap, provider }) {
   }
 
   peer.onConnect(() => {
-    peer.send('swapType', LIGHTNING_SWAP_TYPE)
+    peer.send('swapType', EVM_SWAP_TYPE)
   })
   peer.onMessage('getSwapDetails', () => {
     const { asset, amount, invoice } = state
@@ -45,7 +45,7 @@ export function useLightningSwapMaker ({ peer, metaSwap, provider }) {
   return { ...state, ...actions, peer, metaSwap }
 }
 
-export function useLightningSwapTaker ({ peer, metaSwap }) {
+export function useEvmSwapTaker ({ peer, metaSwap }) {
   const [state, { merge, set }] = useMyReducer()
   useEffect(() => {
     peer.send('getSwapDetails')

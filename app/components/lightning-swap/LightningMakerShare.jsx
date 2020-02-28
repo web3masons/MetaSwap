@@ -1,6 +1,6 @@
 import React from 'react'
 
-const ShareLightningSwap = ({ peerId }) => {
+const LightningMakerShare = ({ peerId }) => {
   const url = `http://localhost:3000/s/${peerId}`
   return (
     <>
@@ -9,4 +9,4 @@ const ShareLightningSwap = ({ peerId }) => {
   )
 }
 
-export default ShareLightningSwap
+export default LightningMakerShare

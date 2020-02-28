@@ -1,11 +1,11 @@
 import MakeMenu from '../../components/MakeMenu'
-import MakeLightningSwap from '../../components/swap/lightning/make/MakeController'
+import MakeLightningSwap from '../../components/lightning-swap/LightningMakerController'
 
-const LightningPage = () => (
+const LightningMaker = () => (
   <>
     <MakeMenu />
     <MakeLightningSwap />
   </>
 )
 
-export default LightningPage
+export default LightningMaker

@@ -1,6 +1,6 @@
 import React from 'react'
 
-const ConfirmLightningSwapCreation = ({ onConfirm }) => {
+const LightningMakerConfirmCreation = ({ onConfirm }) => {
   return (
     <>
       <pre onClick={() => onConfirm()}>Click me to confirm the swap</pre>
@@ -8,4 +8,4 @@ const ConfirmLightningSwapCreation = ({ onConfirm }) => {
   )
 }
 
-export default ConfirmLightningSwapCreation
+export default LightningMakerConfirmCreation

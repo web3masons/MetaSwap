@@ -1,11 +1,11 @@
 import MakeMenu from '../../components/MakeMenu'
-// import MakeLightningSwap from '../../components/swap/lightning/make/Controller'
+import MakeEvmSwap from '../../components/evm-swap/EvmMakerController'
 
-const EvmPage = () => (
+const EvmMaker = () => (
   <>
     <MakeMenu />
-    TODO
+    <MakeEvmSwap />
   </>
 )
 
-export default EvmPage
+export default EvmMaker

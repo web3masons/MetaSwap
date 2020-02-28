@@ -7,6 +7,9 @@ export const isClient =
   window.document &&
   window.document.createElement
 
+export const EVM_SWAP_TYPE = 'evm'
+export const LIGHTNING_SWAP_TYPE = 'lightning'
+
 // EDIT THIS
 export const ganacheAccount = '0xbd9a50b02c327098944bddd44e8820e5e9eeb65280b4388648b6677e6c47d940'
 export const nullAddress = '0x0000000000000000000000000000000000000000'

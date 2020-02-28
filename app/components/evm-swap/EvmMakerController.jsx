@@ -1,20 +1,16 @@
 import { useEffect } from 'react'
 
-import { nullAddress } from '../../../../utils'
-import { usePeer, useLightningSwapMaker, useContractSuite } from '../../../../hooks'
+import { nullAddress } from '../../utils'
+import { usePeer, useEvmSwapMaker, useContractSuite } from '../../hooks'
 
-import TakeSwap from '../../../TakeSwap'
-import Initialize from './Initialize'
-import SetInvoice from './SetInvoice'
-import Share from './Share'
-import ConfirmCreation from './ConfirmCreation'
+import TakeSwap from '../TakeSwap'
 
 const style = { float: 'left', width: '50%', overflow: 'scroll' }
 
-const LightningSwapMakeController = () => {
+const EvmMakerController = () => {
   const { metaSwap, signer, provider } = useContractSuite()
   const peer = usePeer({ signer, host: true })
-  const swap = useLightningSwapMaker({ peer, metaSwap, provider })
+  const swap = useEvmSwapMaker({ peer, metaSwap, provider })
   useEffect(() => {
     swap.initializeSwap({ asset: nullAddress, amount: 12 })
     swap.setInvoice('blah')
@@ -24,19 +20,20 @@ const LightningSwapMakeController = () => {
   return (
     <>
       <div style={style}>
+        <h3>EVM Maker</h3>
         <pre>{JSON.stringify(swap, null, 2)}</pre>
         {(() => {
           if (!swap.asset) {
-            return <Initialize onInitialize={swap.initializeSwap} />
+            return 'Initialize'
           }
           if (!swap.invoice) {
-            return <SetInvoice onSetInvoice={swap.setInvoice} />
+            return 'SetInvoice'
           }
           if (!swap.ready) {
-            return <ConfirmCreation onConfirm={swap.confirmCreation} />
+            return 'ConfirmCreation'
           }
           if (!swap.peer.ready) {
-            return <Share peerId={swap.peer.id} />
+            return 'Share'
           }
           if (!swap.signedSwap) {
             return 'Waiting for taker to return address info...'
@@ -54,4 +51,4 @@ const LightningSwapMakeController = () => {
   )
 }
 
-export default LightningSwapMakeController
+export default EvmMakerController

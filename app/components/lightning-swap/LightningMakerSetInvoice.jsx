@@ -1,6 +1,6 @@
 import React from 'react'
 
-const SetLightningSwapInvoice = ({ onSetInvoice }) => {
+const LightningMakerSetInvoice = ({ onSetInvoice }) => {
   return (
     <>
       <pre onClick={() => onSetInvoice()}>Click me to set invoice</pre>
@@ -8,4 +8,4 @@ const SetLightningSwapInvoice = ({ onSetInvoice }) => {
   )
 }
 
-export default SetLightningSwapInvoice
+export default LightningMakerSetInvoice
