@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import generate from 'nanoid/generate'
 import { Wallet } from 'ethers'
+import { hashPreImage } from './signing'
 
 export const isClient =
   typeof window !== 'undefined' &&
@@ -30,6 +31,11 @@ export function randomHex (n = 8) {
 }
 export function randomAddress () {
   return `0x${randomHex(40)}`
+}
+export function randomPreImage () {
+  const preImage = `0x${randomHex(64)}`
+  const preImageHash = hashPreImage(preImage)
+  return { preImage, preImageHash }
 }
 
 export function parseTx (tx) {

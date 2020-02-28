@@ -67,12 +67,12 @@ export default function useMetaSwap ({ provider, address }) {
       actions.getAccountDetails()
     },
 
-    async signSwap ({ amount, recipient, asset = nullAddress }) {
+    async signSwap ({ amount, recipient, asset = nullAddress, preImageHash = testPreImageHash }) {
       const { nonce } = await actions.getAccountDetails()
       const signedSwap = {
         contractAddress: address,
         nonce: parseInt(nonce) + 1,
-        preImageHash: testPreImageHash,
+        preImageHash,
         amount,
         relayerAmount: 1,
         account: provider.wallet,
@@ -92,10 +92,10 @@ export default function useMetaSwap ({ provider, address }) {
       return true
     },
     // TODO poll chain for published preImageHash
-    relaySwap (params, skipMining) {
+    relaySwap (params) {
       actions.validateParams(params)
       const methodParams = formatParams(params)
-      return tx(contract.swap(...methodParams), skipMining)
+      return tx(contract.swap(...methodParams), true)
     },
     listenForPreImage (preImageHash) {
       // TODO poll the chain for this preImage...

@@ -1,47 +1,44 @@
 import { useEffect } from 'react'
 
-import { nullAddress } from '../../utils'
-import { usePeer, useEvmSwapMaker, useContractSuite } from '../../hooks'
+import { useEvmSwapMaker } from '../../hooks'
 
 import TakeSwap from '../TakeSwap'
 
 const style = { float: 'left', width: '50%', overflow: 'scroll' }
 
-const EvmMakerController = () => {
-  const { metaSwap, signer, provider } = useContractSuite()
-  const peer = usePeer({ signer, host: true })
-  const swap = useEvmSwapMaker({ peer, metaSwap, provider })
+const EvmSwapMakeController = () => {
+  const { maker, taker, ...swap } = useEvmSwapMaker()
   useEffect(() => {
-    swap.initializeSwap({ asset: nullAddress, amount: 12 })
-    swap.setInvoice('blah')
-    swap.confirmCreation()
-    peer.connect()
+    swap.initialize()
   }, [])
   return (
     <>
       <div style={style}>
-        <h3>EVM Maker</h3>
+        <h3>Evm Maker</h3>
         <pre>{JSON.stringify(swap, null, 2)}</pre>
         {(() => {
-          if (!swap.asset) {
-            return 'Initialize'
-          }
-          if (!swap.invoice) {
-            return 'SetInvoice'
-          }
-          if (!swap.ready) {
-            return 'ConfirmCreation'
+          if (!swap.preImage) {
+            return 'Initialize...'
           }
           if (!swap.peer.ready) {
-            return 'Share'
+            return 'Share thee QR code'
           }
-          if (!swap.signedSwap) {
-            return 'Waiting for taker to return address info...'
+          if (!swap.makerSwap.recipient) {
+            return 'Waiting for recipient to give address...'
           }
-          if (!swap.hash) {
+          if (!swap.signedTakerSwap) {
+            return 'Waiting for taker to sign the taker swap...'
+          }
+          if (!swap.makerTxHash) {
             return 'Waiting for the transaction to be relayed...'
           }
-          return <pre>{JSON.stringify(provider.txs[swap.hash], null, 2)}</pre>
+          return (
+            <>
+              <div>Transactions</div>
+              <pre>{JSON.stringify(maker.provider.txs[swap.makerTxHash], null, 2)}</pre>
+              <pre>{JSON.stringify(taker.provider.txs[swap.takerTxHash], null, 2)}</pre>
+            </>
+          )
         })()}
       </div>
       <div style={style}>
@@ -51,4 +48,4 @@ const EvmMakerController = () => {
   )
 }
 
-export default EvmMakerController
+export default EvmSwapMakeController

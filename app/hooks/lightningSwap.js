@@ -1,12 +1,15 @@
-import { useMyReducer } from '../hooks'
+import { useMyReducer, useContractSuite, usePeer } from '../hooks'
 import { useEffect } from 'react'
 import { testAddress, testPreImage, LIGHTNING_SWAP_TYPE } from '../utils'
 
-export function useLightningSwapMaker ({ peer, metaSwap, provider }) {
+export function useLightningSwapMaker () {
   const [state, { merge, set }] = useMyReducer()
 
+  const { metaSwap, signer, provider } = useContractSuite()
+  const peer = usePeer({ signer, host: true })
+
   const actions = {
-    initializeSwap ({ asset, amount }) {
+    initialize ({ asset, amount }) {
       set({ asset, amount })
     },
     setInvoice () {
@@ -14,6 +17,7 @@ export function useLightningSwapMaker ({ peer, metaSwap, provider }) {
     },
     confirmCreation () {
       merge({ ready: true })
+      peer.connect()
     },
     async signSwap () {
       const { recipient, asset, amount } = state
@@ -37,16 +41,19 @@ export function useLightningSwapMaker ({ peer, metaSwap, provider }) {
     actions.signSwap()
     // TODO listen on chain for published preImage, update hash if it exists
   })
-  peer.onMessage('relayedTx', async (hash) => {
-    await provider.getTransaction(hash)
-    merge({ hash })
+  peer.onMessage('relayedTx', async (txHash) => {
+    await provider.getTransaction(txHash)
+    merge({ txHash })
   })
 
-  return { ...state, ...actions, peer, metaSwap }
+  return { ...state, ...actions, peer, provider, metaSwap }
 }
 
-export function useLightningSwapTaker ({ peer, metaSwap }) {
+export function useLightningSwapTaker ({ peer }) {
   const [state, { merge, set }] = useMyReducer()
+
+  const { metaSwap, provider } = useContractSuite()
+
   useEffect(() => {
     peer.send('getSwapDetails')
   }, [])
@@ -74,10 +81,10 @@ export function useLightningSwapTaker ({ peer, metaSwap }) {
       const params = { ...signedSwap, preImage }
       metaSwap.validateParams(params)
       merge({ preImage })
-      const { hash } = await metaSwap.relaySwap(params)
-      merge({ hash })
-      peer.send('relayedTx', hash)
+      const { hash: txHash } = await metaSwap.relaySwap(params)
+      merge({ txHash })
+      peer.send('relayedTx', txHash)
     }
   }
-  return { ...state, ...actions, peer, metaSwap }
+  return { ...state, ...actions, peer, provider, metaSwap }
 }

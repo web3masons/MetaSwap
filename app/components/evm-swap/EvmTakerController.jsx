@@ -1,29 +1,37 @@
-import { useEvmSwapTaker, useContractSuite } from '../../hooks'
+import { useEvmSwapTaker } from '../../hooks'
 
-const EvmTakerController = ({ peer }) => {
-  const { metaSwap, provider } = useContractSuite()
-  const swap = useEvmSwapTaker({ peer, metaSwap })
+const EvmSwapTakerController = ({ peer }) => {
+  const { taker, maker, ...swap } = useEvmSwapTaker({ peer })
   return (
     <>
-      <h3>EVM Taker</h3>
+      <h3>Evm Taker</h3>
       <pre>{JSON.stringify(swap, null, 2)}</pre>
       {(() => {
-        if (!swap.recipient) {
-          return 'Please confirm swap and your address...'
+        if (!swap.makerSwap) {
+          return 'Fetching swap details...'
         }
-        if (!swap.signedSwap) {
-          return 'Waiting for maker to sign the swap...'
+        if (!swap.makerSwap.recipient) {
+          return 'Please confirm your address + the swap...'
+        }
+        if (!swap.signedTakerSwap) {
+          return 'Waiting for maker to sign his swap...'
         }
         if (!swap.preImage) {
-          return 'Please pay invoice and paste the preImage'
+          return 'Waiting for taker to publish the preImage...'
         }
-        if (!swap.hash) {
+        if (!swap.makerTxHash) {
           return 'Relaying...'
         }
-        return <pre>{JSON.stringify(provider.txs[swap.hash], null, 2)}</pre>
+        return (
+          <>
+            <div>Transactions:</div>
+            <pre>{JSON.stringify(maker.provider.txs[swap.makerTxHash], null, 2)}</pre>
+            <pre>{JSON.stringify(taker.provider.txs[swap.takerTxHash], null, 2)}</pre>
+          </>
+        )
       })()}
     </>
   )
 }
 
-export default EvmTakerController
+export default EvmSwapTakerController

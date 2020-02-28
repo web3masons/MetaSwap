@@ -1,25 +1,26 @@
-import { useMyReducer } from '../hooks'
+import { useMyReducer, useContractSuite, usePeer } from '../hooks'
 import { useEffect } from 'react'
-import { testAddress, testPreImage, EVM_SWAP_TYPE } from '../utils'
+import { testAddress, EVM_SWAP_TYPE, randomPreImage, nullAddress } from '../utils'
 
-export function useEvmSwapMaker ({ peer, metaSwap, provider }) {
+export function useEvmSwapMaker () {
   const [state, { merge, set }] = useMyReducer()
 
+  // For now these are on the same chain but will be updated...
+  const maker = useContractSuite()
+  const taker = useContractSuite() // TODO populate with correct chain id etc...
+  const peer = usePeer({ signer: maker.signer, host: true })
+
   const actions = {
-    initializeSwap ({ asset, amount }) {
-      set({ asset, amount })
-    },
-    setInvoice () {
-      merge({ invoice: 'testing' })
-    },
-    confirmCreation () {
-      merge({ ready: true })
-    },
-    async signSwap () {
-      const { recipient, asset, amount } = state
-      const signedSwap = await metaSwap.signSwap({ recipient, asset, amount })
-      merge({ signedSwap })
-      peer.send('signedSwap', signedSwap)
+    initialize ({ recipient = testAddress, asset = nullAddress, amount = 1, takerAsset = nullAddress, takerAmount = 2 } = {}) {
+      const { preImage, preImageHash } = randomPreImage()
+      const makerSwap = {
+        asset, amount, preImageHash
+      }
+      const takerSwap = {
+        asset: takerAsset, amount: takerAmount, recipient, preImageHash
+      }
+      set({ makerSwap, takerSwap, preImage, ready: true })
+      peer.connect()
     }
   }
 
@@ -27,26 +28,40 @@ export function useEvmSwapMaker ({ peer, metaSwap, provider }) {
     peer.send('swapType', EVM_SWAP_TYPE)
   })
   peer.onMessage('getSwapDetails', () => {
-    const { asset, amount, invoice } = state
-    // TODO parse and verify invoice
-    peer.send('swapDetails', { asset, amount, invoice })
+    const { makerSwap, takerSwap } = state
+    peer.send('swapDetails', { makerSwap, takerSwap })
   })
-  peer.onMessage('confirmRecipient', (recipient) => {
-    merge({ recipient })
-    // TODO move this to a button?
-    actions.signSwap()
-    // TODO listen on chain for published preImage, update hash if it exists
+  peer.onMessage('confirmRecipient', async (recipient) => {
+    merge({ makerSwap: { recipient } })
+    const { makerSwap } = state
+    const signedMakerSwap = await maker.metaSwap.signSwap(makerSwap)
+    merge({ signedMakerSwap })
+    peer.send('signedMakerSwap', signedMakerSwap)
   })
-  peer.onMessage('relayedTx', async (hash) => {
-    await provider.getTransaction(hash)
-    merge({ hash })
+  peer.onMessage('signedTakerSwap', async (signedTakerSwap) => {
+    // TODO validate this
+    merge({ signedTakerSwap })
+    const { signedMakerSwap, preImage } = state
+    // send the preImage (not really necessary)
+    peer.send('preImage', preImage)
+    // also relay the preImage to both chains
+    const { hash: makerTxHash } = await maker.metaSwap.relaySwap({ ...signedMakerSwap, preImage })
+    merge({ makerTxHash })
+    peer.send('relayedTx', { makerTxHash })
+    const { hash: takerTxHash } = await taker.metaSwap.relaySwap({ ...signedTakerSwap, preImage })
+    merge({ takerTxHash })
+    peer.send('relayedTx', { takerTxHash })
   })
 
-  return { ...state, ...actions, peer, metaSwap }
+  return { ...state, ...actions, peer, maker, taker }
 }
 
-export function useEvmSwapTaker ({ peer, metaSwap }) {
+export function useEvmSwapTaker ({ peer }) {
   const [state, { merge, set }] = useMyReducer()
+
+  const maker = useContractSuite()
+  const taker = useContractSuite()
+
   useEffect(() => {
     peer.send('getSwapDetails')
   }, [])
@@ -57,27 +72,33 @@ export function useEvmSwapTaker ({ peer, metaSwap }) {
     // TODO this should be a button and input
     actions.confirmRecipient()
   })
-  peer.onMessage('signedSwap', (signedSwap) => {
+  peer.onMessage('signedMakerSwap', async (signedMakerSwap) => {
     // TODO validate this!
-    merge({ signedSwap })
-    actions.pubishPreImage()
+    merge({ signedMakerSwap })
+    // then i sign the taker swap
+    const signedTakerSwap = await maker.metaSwap.signSwap(state.takerSwap)
+    merge({ signedTakerSwap })
+    peer.send('signedTakerSwap', signedTakerSwap)
+    // TODO listen on chain for the preImage in case bob is evil
   })
+  peer.onMessage('relayedTx', async ({ makerTxHash, takerTxHash }) => {
+    if (makerTxHash) {
+      await maker.provider.getTransaction(makerTxHash)
+      merge({ makerTxHash })
+    }
+    if (takerTxHash) {
+      await taker.provider.getTransaction(takerTxHash)
+      merge({ takerTxHash })
+    }
+  })
+  peer.onMessage('preImage', (preImage) => merge({ preImage }))
+
   const actions = {
     confirmRecipient () {
       const recipient = testAddress
-      merge({ recipient })
+      merge({ makerSwap: { recipient } })
       peer.send('confirmRecipient', recipient)
-    },
-    async pubishPreImage () {
-      const preImage = testPreImage
-      const { signedSwap } = state
-      const params = { ...signedSwap, preImage }
-      metaSwap.validateParams(params)
-      merge({ preImage })
-      const { hash } = await metaSwap.relaySwap(params)
-      merge({ hash })
-      peer.send('relayedTx', hash)
     }
   }
-  return { ...state, ...actions, peer, metaSwap }
+  return { ...state, ...actions, peer, maker, taker }
 }

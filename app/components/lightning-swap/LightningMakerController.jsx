@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
 import { nullAddress } from '../../utils'
-import { usePeer, useLightningSwapMaker, useContractSuite } from '../../hooks'
+import { useLightningSwapMaker } from '../../hooks'
 
 import TakeSwap from '../TakeSwap'
 
@@ -13,14 +13,11 @@ import ConfirmCreation from './LightningMakerConfirmCreation'
 const style = { float: 'left', width: '50%', overflow: 'scroll' }
 
 const LightningSwapMakeController = () => {
-  const { metaSwap, signer, provider } = useContractSuite()
-  const peer = usePeer({ signer, host: true })
-  const swap = useLightningSwapMaker({ peer, metaSwap, provider })
+  const swap = useLightningSwapMaker()
   useEffect(() => {
-    swap.initializeSwap({ asset: nullAddress, amount: 12 })
+    swap.initialize({ asset: nullAddress, amount: 12 })
     swap.setInvoice('blah')
     swap.confirmCreation()
-    peer.connect()
   }, [])
   return (
     <>
@@ -43,10 +40,10 @@ const LightningSwapMakeController = () => {
           if (!swap.signedSwap) {
             return 'Waiting for taker to return address info...'
           }
-          if (!swap.hash) {
+          if (!swap.txHash) {
             return 'Waiting for the transaction to be relayed...'
           }
-          return <pre>{JSON.stringify(provider.txs[swap.hash], null, 2)}</pre>
+          return <pre>{JSON.stringify(swap.provider.txs[swap.txHash], null, 2)}</pre>
         })()}
       </div>
       <div style={style}>

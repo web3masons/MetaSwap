@@ -6,6 +6,10 @@ export function hashMessage (p) {
   return utils.solidityKeccak256(types, params)
 }
 
+export function hashPreImage (preImage) {
+  return utils.soliditySha256(['bytes32'], [preImage])
+}
+
 export function signMessage (message, provider) {
   return provider.signMessage(utils.arrayify(message))
 }

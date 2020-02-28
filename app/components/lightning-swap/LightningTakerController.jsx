@@ -1,8 +1,7 @@
-import { useLightningSwapTaker, useContractSuite } from '../../hooks'
+import { useLightningSwapTaker } from '../../hooks'
 
 const LightningSwapTakerController = ({ peer }) => {
-  const { metaSwap, provider } = useContractSuite()
-  const swap = useLightningSwapTaker({ peer, metaSwap })
+  const swap = useLightningSwapTaker({ peer })
   return (
     <>
       <h3>Lightning Taker</h3>
@@ -17,10 +16,10 @@ const LightningSwapTakerController = ({ peer }) => {
         if (!swap.preImage) {
           return 'Please pay invoice and paste the preImage'
         }
-        if (!swap.hash) {
+        if (!swap.txHash) {
           return 'Relaying...'
         }
-        return <pre>{JSON.stringify(provider.txs[swap.hash], null, 2)}</pre>
+        return <pre>{JSON.stringify(swap.provider.txs[swap.txHash], null, 2)}</pre>
       })()}
     </>
   )

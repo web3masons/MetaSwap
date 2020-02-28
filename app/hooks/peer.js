@@ -107,7 +107,7 @@ export default function ({ signer, host, channelId, autoConnect }) {
     return decryptMessage(msg, sharedSecret.current)
   }
   function logMessage (msg) {
-    const iam = host ? '🙍‍♀️' : '🙎‍♂️'
+    const iam = !host ? '🙍‍♀️' : '🙎‍♂️'
     const { payload, type } = msg
     if (type) {
       console.log(iam, type, payload)
