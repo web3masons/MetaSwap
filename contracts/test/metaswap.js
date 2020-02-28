@@ -34,7 +34,7 @@ const waitFor = async n => {
   HASH ORDER:
   address(this),
   addressValues[0], // account
-  addressValues[1], // receiver
+  addressValues[1], // recipient
   addressValues[2], // asset
   addressValues[3], // relayerAddress
   addressValues[4], // relayerAsset
@@ -47,13 +47,13 @@ const waitFor = async n => {
   bytes32Vals[1], // preImage
 */
 async function formatParams(p) {
-  const params = [p.contractAddress, p.account, p.receiver, p.asset, p.relayerAddress, p.relayerAsset, p.nonce, p.amount, p.expirationBlock, p.relayerAmount, p.relayerExpirationBlock, p.preImageHash]
+  const params = [p.contractAddress, p.account, p.recipient, p.asset, p.relayerAddress, p.relayerAsset, p.nonce, p.amount, p.expirationTime, p.relayerAmount, p.relayerExpirationTime, p.preImageHash]
   const types = ['address', 'address', 'address', 'address', 'address', 'address', 'uint', 'uint', 'uint', 'uint', 'uint', 'bytes32'];
   const message = utils.solidityKeccak256(types, params);
   const signature = await wallet.signMessage(utils.arrayify(message));
   return [
-    [p.account, p.receiver, p.asset, p.relayerAddress, p.relayerAsset],
-    [p.nonce, p.amount, p.expirationBlock, p.relayerAmount, p.relayerExpirationBlock],
+    [p.account, p.recipient, p.asset, p.relayerAddress, p.relayerAsset],
+    [p.nonce, p.amount, p.expirationTime, p.relayerAmount, p.relayerExpirationTime],
     [p.preImageHash, p.preImage],
     signature
   ]
@@ -110,9 +110,9 @@ contract('MetaSwap', (accounts) => {
         relayerAddress: accounts[1],
         relayerAsset: nullAddress,
         contractAddress: metaSwap.address,
-        expirationBlock: currentBlock + 20,
-        relayerExpirationBlock: currentBlock + 5,
-        receiver: randomAddress(),
+        expirationTime: currentBlock + 20,
+        relayerExpirationTime: currentBlock + 5,
+        recipient: randomAddress(),
       }
     });
     it("settles valid ether swaps", async () => {
@@ -122,7 +122,7 @@ contract('MetaSwap', (accounts) => {
       const methodParams = await formatParams(params);
       await metaSwap.swap(...methodParams, { from: params.relayerAddress });
       assert.equal(await metaSwap.getBalance.call(params.asset, params.account), expectedBalance, 'sender balance incorrect');
-      assert.equal(await web3.eth.getBalance(params.receiver), params.amount, 'recipient balance incorrect');
+      assert.equal(await web3.eth.getBalance(params.recipient), params.amount, 'recipient balance incorrect');
     });
     it("settles valid token swaps", async () => {
       const deposit = 200;
@@ -135,7 +135,7 @@ contract('MetaSwap', (accounts) => {
       const methodParams = await formatParams(params);
       await metaSwap.swap(...methodParams, { from: params.relayerAddress });
       assert.equal(await metaSwap.getBalance.call(params.asset, params.account), expectedBalance, 'sender balance incorrect');
-      assert.equal(await erc20.balanceOf.call(params.receiver), params.amount, 'recipient balance incorrect');
+      assert.equal(await erc20.balanceOf.call(params.recipient), params.amount, 'recipient balance incorrect');
     });
   });
 });

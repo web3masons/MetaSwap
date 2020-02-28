@@ -3,7 +3,7 @@ pragma solidity >=0.5.16;
 // TODO fix the pagma in production
 // TODO events etc
 // TODO safemath
-// change block to timestamps
+// TODO make more stuff user-configurable
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -23,8 +23,7 @@ contract MetaSwap {
   mapping (bytes32 => bool) _completedSwaps;
   mapping (bytes32 => bytes32) _revealedHashes;
 
-  uint constant _claimWindow = 5 * 60; // 5 minutes
-  uint constant _cooldownBuffer = 2 * 60; // 2 minutes
+  uint constant _cooldownTime = 5 * 60; // 5 minutes
   uint constant _maximumSpend = 5; // maximum spend of asset per swap (balance / maximumSpend)
   address constant _etherAddress = address(0);
   address payable constant _burnAddress = address(0xbad);
@@ -35,15 +34,13 @@ contract MetaSwap {
   }
 
   function getContractDetails() public view returns (
-    uint claimWindow,
-    uint cooldownBuffer,
+    uint cooldownTime,
     uint maximumSpend,
     address etherAddress,
     address burnAddress
   ) {
     return (
-      _claimWindow,
-      _cooldownBuffer,
+      _cooldownTime,
       _maximumSpend,
       _etherAddress,
       _burnAddress
@@ -73,7 +70,7 @@ contract MetaSwap {
   }
 
   function getFrozenTime(address _account) public view returns (uint frozenBlockNumber) {
-    return _accountDetails[_account].cooldownStart + _claimWindow + _cooldownBuffer;
+    return _accountDetails[_account].cooldownStart + _cooldownTime;
   }
 
   function getIsFrozen(address _account) public view returns (bool isFrozen) {
@@ -96,11 +93,11 @@ contract MetaSwap {
     address[5] memory _addressVals,
     uint[5] memory _uintVals,
     bytes32[2] memory _bytes32Vals
-  ) public view returns (bytes32 _messageHash) {
+  ) public view returns (bytes32 messageHash) {
     return keccak256(abi.encodePacked(
       address(this),
       _addressVals[0], // account
-      _addressVals[1], // receiver
+      _addressVals[1], // recipient
       _addressVals[2], // asset
       _addressVals[3], // relayerAddress
       _addressVals[4], // relayerAsset
@@ -201,7 +198,7 @@ contract MetaSwap {
     bytes memory _signature
   ) private returns (bool success) {
     require(_completedSwaps[_messageHash] != true, 'swap is already claimed');
-    require(_uintVals[2] > block.timestamp, 'swap os expired');
+    require(_uintVals[2] > block.timestamp, 'swap is expired');
     require(getSignatureIsValid(_addressVals[0], _signature, _messageHash), 'invalid signature');
     if (punishDishonest(_addressVals, _uintVals)) {
       return false;
