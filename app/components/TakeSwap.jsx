@@ -1,10 +1,20 @@
-import useLightningSwap from '../hooks/lightningSwap'
-import { bob } from '../utils'
+import { usePeer } from '../hooks'
+import { bob as signer } from '../utils'
+import Lightning from './swap/lightning/take/TakeController'
+import { useState } from 'react'
 
 const TakeSwap = ({ channelId }) => {
-  const swap = useLightningSwap({ signer: bob, channelId })
+  const [swapType, setSwapType] = useState(null)
+  const peer = usePeer({ signer, channelId, autoConnect: true })
+  peer.onMessage('swapType', setSwapType)
+  if (!swapType) {
+    return 'Connecting...'
+  }
+  if (swapType === 'lightning') {
+    return <Lightning peer={peer} />
+  }
   return (
-    <pre>{JSON.stringify({ swap }, null, 2)}</pre>
+    <pre>Swap type not recognised</pre>
   )
 }
 

@@ -8,7 +8,7 @@ const { Peer } = isClient && require('peerjs').peerjs
 
 const peerConfig = { debug: 0, host: 'localhost', port: 3000, path: '/rtc' }
 
-export default function ({ signer, host, channelId, onConnect, connect = true }) {
+export default function ({ signer, host, channelId, autoConnect }) {
   const [state, { merge, set }] = useMyReducer()
 
   const peer = useRef(null)
@@ -22,18 +22,21 @@ export default function ({ signer, host, channelId, onConnect, connect = true })
   })
 
   useEffect(() => {
-    if (connect) {
-      if (host) {
-        createChannel()
-      } else if (channelId) {
-        connectToChannel()
-      }
+    if (autoConnect) {
+      connect()
     }
     return () => {
       peer.current && peer.current.destroy()
     }
-  }, [connect, host, channelId])
+  }, [autoConnect, host, channelId])
 
+  function connect () {
+    if (host) {
+      createChannel()
+    } else if (channelId) {
+      connectToChannel()
+    }
+  }
   function createChannel () {
     const generatedId = randomId()
     peer.current = new Peer(generatedId, peerConfig)
@@ -103,11 +106,22 @@ export default function ({ signer, host, channelId, onConnect, connect = true })
   function decrypt (msg) {
     return decryptMessage(msg, sharedSecret.current)
   }
+  function logMessage (msg) {
+    const iam = host ? '🙍‍♀️' : '🙎‍♂️'
+    const { payload, type } = msg
+    if (type) {
+      console.log(iam, type, payload)
+    } else {
+      console.log(iam, msg)
+    }
+  }
   function sendMessage (msg) {
+    logMessage(msg)
     conn.current.send(encrypt({ ...msg, _timestamp: new Date().getTime() }))
   }
 
   const actions = {
+    connect,
     send: (type, payload) => sendMessage({ type, payload }),
     onConnect (fn) {
       handlers.current.onConnect = fn

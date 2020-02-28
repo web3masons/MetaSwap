@@ -1,33 +1,11 @@
-import { useMyReducer, usePeer } from '../hooks'
+import { useMyReducer } from '../hooks'
+import { useEffect } from 'react'
+import { testAddress, testPreImage } from '../utils'
 
-export default function useLightningSwap ({ signer, maker, channelId }) {
+export function useLightningSwapMaker ({ peer, metaSwap, provider }) {
   const [state, { merge, set }] = useMyReducer()
-  // only connect host when the invoice is available
-  const host = !!maker
-  const connect = !host || !!state.ready // EDIT disbale default connect
-  const peer = usePeer({ signer, host, channelId, connect: true })
-
-  peer.onConnect(() => {
-    console.log('you connected!')
-    peer.send('test', { something: 'wtf' })
-  })
-  peer.onData((data) => {
-    console.log('hi data', data)
-  })
-  peer.onMessage('test', (data) => {
-    console.log('got test message', data)
-  })
 
   const actions = {
-    // mixed actions
-    publishPreImage () {
-      // todo
-    },
-    // taker actions
-    confirmTakerAddress () {
-      peer.send('confirmTakerAddress', { address: 'some address' })
-    },
-    // maker actions
     initializeSwap ({ asset, amount }) {
       set({ asset, amount })
     },
@@ -36,12 +14,70 @@ export default function useLightningSwap ({ signer, maker, channelId }) {
     },
     confirmCreation () {
       merge({ ready: true })
+    },
+    async signSwap () {
+      const { recipient, asset, amount } = state
+      const signedSwap = await metaSwap.signSwap({ recipient, asset, amount })
+      merge({ signedSwap })
+      peer.send('signedSwap', signedSwap)
     }
   }
 
-  return {
-    ...state,
-    ...actions,
-    peer
+  peer.onConnect(() => {
+    peer.send('swapType', 'lightning')
+  })
+  peer.onMessage('getSwapDetails', () => {
+    const { asset, amount, invoice } = state
+    // TODO parse and verify invoice
+    peer.send('swapDetails', { asset, amount, invoice })
+  })
+  peer.onMessage('confirmRecipient', (recipient) => {
+    merge({ recipient })
+    // TODO move this to a button?
+    actions.signSwap()
+    // TODO listen on chain for published preImage, update hash if it exists
+  })
+  peer.onMessage('relayedTx', async (hash) => {
+    await provider.getTransaction(hash)
+    merge({ hash })
+  })
+
+  return { ...state, ...actions, peer, metaSwap }
+}
+
+export function useLightningSwapTaker ({ peer, metaSwap }) {
+  const [state, { merge, set }] = useMyReducer()
+  useEffect(() => {
+    peer.send('getSwapDetails')
+  }, [])
+
+  peer.onMessage('swapDetails', (details) => {
+    // TODO parse and verify invoice
+    set(details)
+    // TODO this should be a button and input
+    actions.confirmRecipient()
+  })
+  peer.onMessage('signedSwap', (signedSwap) => {
+    // TODO validate this!
+    merge({ signedSwap })
+    actions.pubishPreImage()
+  })
+  const actions = {
+    confirmRecipient () {
+      const recipient = testAddress
+      merge({ recipient })
+      peer.send('confirmRecipient', recipient)
+    },
+    async pubishPreImage () {
+      const preImage = testPreImage
+      const { signedSwap } = state
+      const params = { ...signedSwap, preImage }
+      metaSwap.validateParams(params)
+      merge({ preImage })
+      const { hash } = await metaSwap.relaySwap(params)
+      merge({ hash })
+      peer.send('relayedTx', hash)
+    }
   }
+  return { ...state, ...actions, peer, metaSwap }
 }

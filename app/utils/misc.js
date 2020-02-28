@@ -7,11 +7,14 @@ export const isClient =
   window.document &&
   window.document.createElement
 
+// EDIT THIS
+export const ganacheAccount = '0xbd9a50b02c327098944bddd44e8820e5e9eeb65280b4388648b6677e6c47d940'
 export const nullAddress = '0x0000000000000000000000000000000000000000'
 export const testAddress = '0x0000000000000000000000000000000000000b0b'
 export const testTxHash = '0x0783297c83784d26ea1d134619b5122f49b96057abf3a117f0365ed875bf4a1b'
-// EDIT THIS
-export const ganacheAccount = '0x6f362b01031d9cd0a650bfb8c8d5d541c322bbc8e565d18a19d69243ce897aaf'
+
+export const testPreImage = '0x561c9f2cc0e720388ff4e57611e7bce3d0b3d5b44563b15486646372b0f4ffc9'
+export const testPreImageHash = '0x99fdc2e2d58d8e772cd819bd3ca41bbca56cc36dfc07e4bc97d7ed14bf2d2288'
 
 export const alice = new Wallet('0x0000000000000000000000000000000000000000000000000000000000000002')
 export const bob = new Wallet('0x0000000000000000000000000000000000000000000000000000000000000001')

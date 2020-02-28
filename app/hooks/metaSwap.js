@@ -1,5 +1,5 @@
 import { abi } from '../../contracts/build/contracts/MetaSwap'
-import { testAddress, nullAddress, parseCall, createSignature, formatParams } from '../utils'
+import { nullAddress, parseCall, createSignature, testPreImageHash, formatParams } from '../utils'
 import { useContract } from '../hooks'
 
 export default function useMetaSwap ({ provider, address }) {
@@ -67,14 +67,13 @@ export default function useMetaSwap ({ provider, address }) {
       actions.getAccountDetails()
     },
 
-    async swap (signer, asset = nullAddress) {
+    async signSwap ({ amount, recipient, asset = nullAddress }) {
       const { nonce } = await actions.getAccountDetails()
-      const params = {
+      const signedSwap = {
         contractAddress: address,
         nonce: parseInt(nonce) + 1,
-        preImage: '0x561c9f2cc0e720388ff4e57611e7bce3d0b3d5b44563b15486646372b0f4ffc9',
-        preImageHash: '0x99fdc2e2d58d8e772cd819bd3ca41bbca56cc36dfc07e4bc97d7ed14bf2d2288',
-        amount: 5,
+        preImageHash: testPreImageHash,
+        amount,
         relayerAmount: 1,
         account: provider.wallet,
         asset,
@@ -82,15 +81,24 @@ export default function useMetaSwap ({ provider, address }) {
         relayerAsset: asset,
         expirationTime: Math.floor(new Date().getTime() / 1000) + 10e8,
         relayerExpirationTime: Math.floor(new Date().getTime() / 1000) + 10e8,
-        receiver: testAddress
+        recipient
       }
-      params.signature = await createSignature(params, signer)
+      const signer = provider.getProvider().current
+      signedSwap.signature = await createSignature(signedSwap, signer)
+      return signedSwap
+    },
+    validateParams (params) {
+      // todo, throw if problem
+      return true
+    },
+    // TODO poll chain for published preImageHash
+    relaySwap (params, skipMining) {
+      actions.validateParams(params)
       const methodParams = formatParams(params)
-      // const message = hashMessage(params)
-      // use getSignatureIsValid...
-      console.log(methodParams)
-      await tx(contract.swap(...methodParams))
-      // console.log('got', params, methodParams)
+      return tx(contract.swap(...methodParams), skipMining)
+    },
+    listenForPreImage (preImageHash) {
+      // TODO poll the chain for this preImage...
     }
   }
 

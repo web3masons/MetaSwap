@@ -37,7 +37,7 @@ export default function useProvider ({ chain, secret }) {
 
     setProvider (chain) {
       provider.current = new ethers.providers.JsonRpcProvider(chain.url)
-      set(chain)
+      set({ ...chain, txs: {} })
       if (wallet.current) {
         actions.setWallet(wallet.current.privateKey)
       }

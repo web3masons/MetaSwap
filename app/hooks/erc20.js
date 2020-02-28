@@ -9,8 +9,8 @@ export default function useErc20 ({ provider, address }) {
       const balance = await contract.balanceOf(wallet)
       merge({ balance: { [wallet]: balance.toString() } })
     },
-    approve (receiver, amount) {
-      return tx(contract.approve(receiver, amount))
+    approve (recipient, amount) {
+      return tx(contract.approve(recipient, amount))
     }
   }
 

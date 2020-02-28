@@ -2,7 +2,7 @@ import { mergeDeep } from '../utils'
 import { useReducer } from 'react'
 
 function reducer (state = {}, { type, payload }) {
-  console.log(`>> ${type}`, payload)
+  // console.log(`>> ${type}`, payload)
   switch (type) {
     case 'set':
       return payload

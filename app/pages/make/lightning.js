@@ -1,5 +1,5 @@
 import MakeMenu from '../../components/MakeMenu'
-import MakeLightningSwap from '../../components/swap/lightning/make/Controller'
+import MakeLightningSwap from '../../components/swap/lightning/make/MakeController'
 
 const LightningPage = () => (
   <>
