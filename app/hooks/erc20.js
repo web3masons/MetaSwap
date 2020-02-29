@@ -5,13 +5,19 @@ export default function useErc20 ({ provider, address }) {
   const [state, { merge, tx }, contract] = useContract({ provider, address, abi })
 
   const actions = {
-    async balanceOf (wallet = provider.wallet) {
+    async getBalance (wallet = provider.wallet) {
       const balance = await contract.balanceOf(wallet)
-      merge({ balance: { [wallet]: balance.toString() } })
+      merge({ balances: { [wallet]: balance.toString() } })
     },
     approve (recipient, amount) {
       return tx(contract.approve(recipient, amount))
+    },
+    balance (account = provider.wallet) {
+      return (
+        (state.balances && state.balances[account]) || '0'
+      )
     }
+
   }
 
   return {

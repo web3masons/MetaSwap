@@ -19,7 +19,7 @@ export default function useContract ({ provider, address, abi }) {
         actions.set({ address })
       }
     }
-  }, [providerUrl, address])
+  }, [providerUrl, provider.wallet, address])
 
   actions.tx = async (promise, skipMining) => {
     const tx = await provider.tx(promise, true)

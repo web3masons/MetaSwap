@@ -1,12 +1,23 @@
 import { chains } from '../utils/config'
+import { useEffect } from 'react'
 
-const SelectChain = ({ selected, onChange }) => {
+const SelectChain = ({ autoSelect, onChange }) => {
+  const items = Object.values(chains)
+  const autoSelected = autoSelect && items[0].key
+  useEffect(() => {
+    if (autoSelected) {
+      onChange(chains[autoSelected])
+    }
+  }, [autoSelected])
   return (
-    <select onChange={(e) => onChange(chains[e.target.value])} defaultValue="" selected={selected}>
+    <select
+      onChange={e => onChange(chains[e.target.value])}
+      defaultValue={autoSelected}
+    >
       <option value="" disabled hidden>
         Select Chain:
       </option>
-      {Object.values(chains).map(c => (
+      {items.map(c => (
         <option key={c.key} value={c.key}>
           {c.name}
         </option>

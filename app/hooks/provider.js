@@ -5,7 +5,7 @@ import { useMyReducer } from '../hooks'
 
 export default function useProvider ({ chain, secret }) {
   const [state, { merge, set }] = useMyReducer()
-
+  // console.log('hello', state)
   const provider = useRef(null)
   const wallet = useRef(null)
 
@@ -37,7 +37,7 @@ export default function useProvider ({ chain, secret }) {
 
     setProvider (chain) {
       provider.current = new ethers.providers.JsonRpcProvider(chain.url)
-      set({ ...chain, txs: {} })
+      set({ ...chain })
       if (wallet.current) {
         actions.setWallet(wallet.current.privateKey)
       }
@@ -57,7 +57,10 @@ export default function useProvider ({ chain, secret }) {
 
     async getBalance (address = state.wallet) {
       const balance = (await provider.current.getBalance(address)).toString()
-      merge({ balance: { [address]: balance } })
+      merge({ balances: { [address]: balance } })
+    },
+    balance (address = state.wallet) {
+      return (state.balances && state.balances[address]) || 0
     },
 
     async getBlockNumber () {
@@ -69,7 +72,9 @@ export default function useProvider ({ chain, secret }) {
     async getBlock (_hashOrNumber) {
       const hashOrNumber = _hashOrNumber || await actions.getBlockNumber()
       const block = await provider.current.getBlock(hashOrNumber)
-      merge({ block: { [block.hash]: parseCall(block) } })
+      if (block) {
+        merge({ blocks: { [block.hash]: parseCall(block) } })
+      }
     },
 
     async getTransaction (hash) {
@@ -84,10 +89,16 @@ export default function useProvider ({ chain, secret }) {
     async increaseTime (seconds) {
       await provider.current.send('evm_increaseTime', [seconds])
       await provider.current.send('evm_mine')
+    },
+
+    send (to, value) {
+      return actions.tx(wallet.current.sendTransaction({ to, value }), true)
     }
   }
 
   return {
+    // txs: {},
+    // balance: {},
     ...state,
     ...actions
   }

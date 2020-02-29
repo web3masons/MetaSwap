@@ -8,7 +8,7 @@ export default function useMetaSwap ({ provider, address }) {
   const actions = {
     async getBalance (asset = nullAddress, wallet = provider.wallet) {
       const balance = await contract.getBalance(asset, wallet)
-      merge({ balance: { [wallet]: { [asset]: balance.toString() } } })
+      merge({ balances: { [wallet]: { [asset]: balance.toString() } } })
     },
 
     async getAccountDetails (wallet = provider.wallet) {
@@ -46,7 +46,7 @@ export default function useMetaSwap ({ provider, address }) {
       await tx(contract.withdraw(assetAddress, value))
       actions.getBalance(assetAddress)
       if (erc20) {
-        erc20.balanceOf()
+        erc20.getBalance()
       } else {
         provider.getBalance()
       }
@@ -67,7 +67,12 @@ export default function useMetaSwap ({ provider, address }) {
       actions.getAccountDetails()
     },
 
-    async signSwap ({ amount, recipient, asset = nullAddress, preImageHash = testPreImageHash }) {
+    async signSwap ({
+      amount,
+      recipient,
+      asset = nullAddress,
+      preImageHash = testPreImageHash
+    }) {
       const { nonce } = await actions.getAccountDetails()
       const signedSwap = {
         contractAddress: address,
@@ -99,6 +104,16 @@ export default function useMetaSwap ({ provider, address }) {
     },
     listenForPreImage (preImageHash) {
       // TODO poll the chain for this preImage...
+    },
+    balance (asset = nullAddress, account = provider.wallet) {
+      return (
+        (state.balances && state.balances[account] &&
+          state.balances[account][asset]) ||
+        0
+      )
+    },
+    accountDetail (account = provider.wallet) {
+      return (state.accountDetails && state.accountDetails[account])
     }
   }
 

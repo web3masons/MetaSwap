@@ -1,11 +1,9 @@
-import { useState } from 'react'
+import '../utils/demo-accounts'
 
-export default function Example () {
-  const [count, setCount] = useState(0)
+export default function Index () {
   return (
     <div>
-      <p>You clicked {count} times</p>
-      <button onClick={() => setCount(count + 1)}>Click me</button>
+      Hello!
     </div>
   )
 }

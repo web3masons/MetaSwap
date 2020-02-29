@@ -2,12 +2,13 @@ import { useMyReducer, useContractSuite, usePeer } from '../hooks'
 import { useEffect } from 'react'
 import { testAddress, testPreImage, LIGHTNING_SWAP_TYPE } from '../utils'
 import { decodeInvoice } from '../utils/lightning'
+import { makerSigner, relayer } from '../utils/demo-accounts'
 
 export function useLightningSwapMaker () {
   const [state, { merge, set }] = useMyReducer()
 
-  const { metaSwap, signer, provider } = useContractSuite()
-  const peer = usePeer({ signer, host: true })
+  const { metaSwap, provider } = useContractSuite({ secret: relayer.privateKey })
+  const peer = usePeer({ signer: makerSigner, host: true })
 
   const actions = {
     initialize ({ asset, amount, invoice }) {

@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 
 import { useLightningSwapMaker } from '../../hooks'
 
@@ -11,18 +10,18 @@ const style = { float: 'left', width: '50%', overflow: 'scroll' }
 
 const LightningSwapMakeController = () => {
   const swap = useLightningSwapMaker()
-  useEffect(() => {
-    // uncomment me to test flow
-    // swap.initialize({ asset: '0x0', amount: 12 })
-  }, [])
   return (
     <>
       <div style={style}>
         <h3>Lightning Maker</h3>
-        {/* <p>TODO: Chain / Account Selection</p> */}
         {(() => {
           if (!swap.ready) {
-            return <Initialize onInitialize={swap.initialize} />
+            return (
+              <Initialize
+                onInitialize={swap.initialize}
+                onUpdateChain={swap.provider.setProvider}
+              />
+            )
           }
           if (!swap.peer.channelId) {
             return 'Connecting...'
@@ -34,7 +33,7 @@ const LightningSwapMakeController = () => {
             return 'Waiting for taker to return address info...'
           }
           if (!swap.txHash) {
-            return 'Waiting for the transaction to be relayed...'
+            return 'Waiting invoice to be paid and transaction to be relayed...'
           }
           return <pre>{JSON.stringify(swap.provider.txs[swap.txHash], null, 2)}</pre>
         })()}
