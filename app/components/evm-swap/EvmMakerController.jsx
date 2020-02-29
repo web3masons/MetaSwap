@@ -3,25 +3,26 @@ import { useEffect } from 'react'
 import { useEvmSwapMaker } from '../../hooks'
 
 import TakeSwap from '../TakeSwap'
+import ShareChannel from '../ShareChannel'
+import Initialize from './EvmMakerInitialize'
 
 const style = { float: 'left', width: '50%', overflow: 'scroll' }
 
 const EvmSwapMakeController = () => {
   const { maker, taker, ...swap } = useEvmSwapMaker()
-  useEffect(() => {
-    swap.initialize()
-  }, [])
   return (
     <>
       <div style={style}>
         <h3>Evm Maker</h3>
-        <pre>{JSON.stringify(swap, null, 2)}</pre>
         {(() => {
           if (!swap.preImage) {
-            return 'Initialize...'
+            return <Initialize onInitialize={swap.initialize} />
+          }
+          if (!swap.peer.channelId) {
+            return 'Connecting...'
           }
           if (!swap.peer.ready) {
-            return 'Share thee QR code'
+            return <ShareChannel peerId={swap.peer.id} />
           }
           if (!swap.makerSwap.recipient) {
             return 'Waiting for recipient to give address...'
@@ -35,14 +36,19 @@ const EvmSwapMakeController = () => {
           return (
             <>
               <div>Transactions</div>
-              <pre>{JSON.stringify(maker.provider.txs[swap.makerTxHash], null, 2)}</pre>
-              <pre>{JSON.stringify(taker.provider.txs[swap.takerTxHash], null, 2)}</pre>
+              <pre>
+                {JSON.stringify(maker.provider.txs[swap.makerTxHash], null, 2)}
+              </pre>
+              <pre>
+                {JSON.stringify(taker.provider.txs[swap.takerTxHash], null, 2)}
+              </pre>
             </>
           )
         })()}
+        <pre>{JSON.stringify(swap, null, 2)}</pre>
       </div>
       <div style={style}>
-        {swap.ready && <TakeSwap channelId={swap.peer.channelId} />}
+        {swap.peer.channelId && <TakeSwap channelId={swap.peer.channelId} />}
       </div>
     </>
   )

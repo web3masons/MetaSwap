@@ -11,10 +11,10 @@ export function useEvmSwapMaker () {
   const peer = usePeer({ signer: maker.signer, host: true })
 
   const actions = {
-    initialize ({ recipient = testAddress, asset = nullAddress, amount = 1, takerAsset = nullAddress, takerAmount = 2 } = {}) {
+    initialize ({ recipient = testAddress, makerAsset = nullAddress, makerAmount = 1, takerAsset = nullAddress, takerAmount = 2 } = {}) {
       const { preImage, preImageHash } = randomPreImage()
       const makerSwap = {
-        asset, amount, preImageHash
+        asset: makerAsset, amount: makerAmount, preImageHash
       }
       const takerSwap = {
         asset: takerAsset, amount: takerAmount, recipient, preImageHash
@@ -70,7 +70,7 @@ export function useEvmSwapTaker ({ peer }) {
     // TODO parse and verify invoice
     set(details)
     // TODO this should be a button and input
-    actions.confirmRecipient()
+    // actions.confirmRecipient()
   })
   peer.onMessage('signedMakerSwap', async (signedMakerSwap) => {
     // TODO validate this!
@@ -94,8 +94,7 @@ export function useEvmSwapTaker ({ peer }) {
   peer.onMessage('preImage', (preImage) => merge({ preImage }))
 
   const actions = {
-    confirmRecipient () {
-      const recipient = testAddress
+    confirmRecipient ({ recipient = testAddress }) {
       merge({ makerSwap: { recipient } })
       peer.send('confirmRecipient', recipient)
     }
