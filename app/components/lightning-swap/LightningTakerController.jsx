@@ -1,26 +1,30 @@
 import { useLightningSwapTaker } from '../../hooks'
+import LightningTakerConfirm from './LightningTakerConfirm'
+import LightningTakerInputPreImage from './LightningTakerInputPreImage'
 
 const LightningSwapTakerController = ({ peer }) => {
   const swap = useLightningSwapTaker({ peer })
   return (
     <>
       <h3>Lightning Taker</h3>
-      <pre>{JSON.stringify(swap, null, 2)}</pre>
       {(() => {
         if (!swap.recipient) {
-          return 'Please confirm swap and your address...'
+          return <LightningTakerConfirm onConfirm={swap.confirmRecipient} />
         }
         if (!swap.signedSwap) {
           return 'Waiting for maker to sign the swap...'
         }
         if (!swap.preImage) {
-          return 'Please pay invoice and paste the preImage'
+          return <LightningTakerInputPreImage invoice={swap.invoice} onChange={swap.publishPreImage} />
         }
         if (!swap.txHash) {
           return 'Relaying...'
         }
-        return <pre>{JSON.stringify(swap.provider.txs[swap.txHash], null, 2)}</pre>
+        return (
+          <pre>{JSON.stringify(swap.provider.txs[swap.txHash], null, 2)}</pre>
+        )
       })()}
+      <pre>{JSON.stringify(swap, null, 2)}</pre>
     </>
   )
 }

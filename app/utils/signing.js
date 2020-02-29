@@ -6,6 +6,10 @@ export function hashMessage (p) {
   return utils.solidityKeccak256(types, params)
 }
 
+export function prefixHex (hex) {
+  return hex.slice(0, 2) === '0x' ? hex : `0x${hex}`
+}
+
 export function hashPreImage (preImage) {
   return utils.soliditySha256(['bytes32'], [preImage])
 }

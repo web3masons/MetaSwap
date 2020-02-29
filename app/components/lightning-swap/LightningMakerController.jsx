@@ -1,41 +1,34 @@
 import { useEffect } from 'react'
 
-import { nullAddress } from '../../utils'
 import { useLightningSwapMaker } from '../../hooks'
 
 import TakeSwap from '../TakeSwap'
+import ShareChannel from '../ShareChannel'
 
 import Initialize from './LightningMakerInitialize'
-import SetInvoice from './LightningMakerSetInvoice'
-import Share from './LightningMakerShare'
-import ConfirmCreation from './LightningMakerConfirmCreation'
 
 const style = { float: 'left', width: '50%', overflow: 'scroll' }
 
 const LightningSwapMakeController = () => {
   const swap = useLightningSwapMaker()
   useEffect(() => {
-    swap.initialize({ asset: nullAddress, amount: 12 })
-    swap.setInvoice('blah')
-    swap.confirmCreation()
+    // uncomment me to test flow
+    // swap.initialize({ asset: '0x0', amount: 12 })
   }, [])
   return (
     <>
       <div style={style}>
         <h3>Lightning Maker</h3>
-        <pre>{JSON.stringify(swap, null, 2)}</pre>
+        {/* <p>TODO: Chain / Account Selection</p> */}
         {(() => {
-          if (!swap.asset) {
-            return <Initialize onInitialize={swap.initializeSwap} />
-          }
-          if (!swap.invoice) {
-            return <SetInvoice onSetInvoice={swap.setInvoice} />
-          }
           if (!swap.ready) {
-            return <ConfirmCreation onConfirm={swap.confirmCreation} />
+            return <Initialize onInitialize={swap.initialize} />
+          }
+          if (!swap.peer.channelId) {
+            return 'Connecting...'
           }
           if (!swap.peer.ready) {
-            return <Share peerId={swap.peer.id} />
+            return <ShareChannel peerId={swap.peer.id} />
           }
           if (!swap.signedSwap) {
             return 'Waiting for taker to return address info...'
@@ -45,9 +38,10 @@ const LightningSwapMakeController = () => {
           }
           return <pre>{JSON.stringify(swap.provider.txs[swap.txHash], null, 2)}</pre>
         })()}
+        <pre>{JSON.stringify(swap, null, 2)}</pre>
       </div>
       <div style={style}>
-        {swap.ready && <TakeSwap channelId={swap.peer.channelId} />}
+        {swap.peer.channelId && <TakeSwap channelId={swap.peer.channelId} />}
       </div>
     </>
   )

@@ -11,6 +11,7 @@
   "keywords": [],
   "author": "",
   "dependencies": {
+    "bolt11": "^1.2.7",
     "eslint-plugin-react-hooks": "^2.4.0",
     "ethers": "^4.0.45",
     "nanoid": "^2.1.11",
@@ -18,6 +19,7 @@
     "next-routes": "^1.4.2",
     "peer": "^0.2.10",
     "peerjs": "^1.2.0",
+    "qrcode.react": "^1.0.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0"
   },

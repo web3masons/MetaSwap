@@ -1,6 +1,7 @@
 import { useMyReducer, useContractSuite, usePeer } from '../hooks'
 import { useEffect } from 'react'
 import { testAddress, testPreImage, LIGHTNING_SWAP_TYPE } from '../utils'
+import { decodeInvoice } from '../utils/lightning'
 
 export function useLightningSwapMaker () {
   const [state, { merge, set }] = useMyReducer()
@@ -9,14 +10,9 @@ export function useLightningSwapMaker () {
   const peer = usePeer({ signer, host: true })
 
   const actions = {
-    initialize ({ asset, amount }) {
-      set({ asset, amount })
-    },
-    setInvoice () {
-      merge({ invoice: 'testing' })
-    },
-    confirmCreation () {
-      merge({ ready: true })
+    initialize ({ asset, amount, invoice }) {
+      const maker = provider.wallet
+      set({ asset, maker, amount, invoice, ready: true })
       peer.connect()
     },
     async signSwap () {
@@ -31,9 +27,8 @@ export function useLightningSwapMaker () {
     peer.send('swapType', LIGHTNING_SWAP_TYPE)
   })
   peer.onMessage('getSwapDetails', () => {
-    const { asset, amount, invoice } = state
-    // TODO parse and verify invoice
-    peer.send('swapDetails', { asset, amount, invoice })
+    const { maker, asset, amount, invoice: { invoice } } = state
+    peer.send('swapDetails', { maker, asset, amount, invoice })
   })
   peer.onMessage('confirmRecipient', (recipient) => {
     merge({ recipient })
@@ -60,23 +55,23 @@ export function useLightningSwapTaker ({ peer }) {
 
   peer.onMessage('swapDetails', (details) => {
     // TODO parse and verify invoice
-    set(details)
+    const invoice = decodeInvoice(details.invoice)
+    // TODO check account owner and signer
+    set({ ...details, invoice })
     // TODO this should be a button and input
-    actions.confirmRecipient()
+    // actions.confirmRecipient()
   })
   peer.onMessage('signedSwap', (signedSwap) => {
     // TODO validate this!
     merge({ signedSwap })
-    actions.pubishPreImage()
+    // actions.pubishPreImage()
   })
   const actions = {
-    confirmRecipient () {
-      const recipient = testAddress
+    confirmRecipient ({ recipient = testAddress }) {
       merge({ recipient })
       peer.send('confirmRecipient', recipient)
     },
-    async pubishPreImage () {
-      const preImage = testPreImage
+    async publishPreImage ({ preImage = testPreImage }) {
       const { signedSwap } = state
       const params = { ...signedSwap, preImage }
       metaSwap.validateParams(params)
