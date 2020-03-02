@@ -13,12 +13,14 @@ module.exports = {
     kovan: {
       provider: () => new HDWalletProvider(mnemonic, 'https://kovan.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73'),
       network_id: 42,
-      networkCheckTimeout: 1000000000
+      networkCheckTimeout: 1000000000,
+      skipDryRun: true
     },
     rinkeby: {
       provider: () => new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73'),
       network_id: 4,
-      networkCheckTimeout: 1000000000
+      networkCheckTimeout: 1000000000,
+      skipDryRun: true
     }
   },
 }
