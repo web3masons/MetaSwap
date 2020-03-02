@@ -2,25 +2,19 @@ import React, { useState } from 'react'
 
 import { nullAddress, testAddress } from '../../utils'
 
-const EvmMakerInitialize = ({ onInitialize }) => {
+import AssetAmountInput from '../AssetAmountInput'
+import DepositedAmount from '../DepositedAmount'
+import Json from '../Json'
+
+const EvmMakerInitialize = ({ onInitialize, swap }) => {
   const [state, setState] = useState({})
 
   function handleChange (e) {
     if (e.target) {
       setState({ ...state, [e.target.name]: e.target.value })
     } else {
-      setState({ ...state, invoice: e })
+      setState({ ...state, ...e })
     }
-  }
-  function handleAutoFill (e) {
-    e.preventDefault()
-    onInitialize({
-      recipient: testAddress,
-      makerAsset: nullAddress,
-      makerAmount: 2,
-      takerAsset: nullAddress,
-      takerAmount: 3
-    })
   }
   const handleSubmit = (e) => {
     e && e.preventDefault()
@@ -29,18 +23,44 @@ const EvmMakerInitialize = ({ onInitialize }) => {
   // TODO validation (e.g. expires and such, also read contract!)
   return (
     <form onSubmit={handleSubmit}>
-      <input name="recipient" value={state.recipient} placeholder="Recipient" onChange={handleChange} />
-      <br />
-      <input name="makerAsset" value={state.makerAsset} placeholder="Maker Asset" onChange={handleChange} />
-      <br />
-      <input name="makerAmount" value={state.makerAmount} placeholder="Maker Amount" onChange={handleChange} />
+      Recipient address:
       <br/>
-      <input name="takerAsset" value={state.takerAsset} placeholder="Taker Asset" onChange={handleChange} />
+      <input
+        name="recipient"
+        value={state.recipient}
+        placeholder="Recipient"
+        onChange={(e) => handleChange({ target: { name: e.target.name, value: testAddress } })}
+      />
       <br />
-      <input name="takerAmount" value={state.takerAmount} placeholder="Taker Amount" onChange={handleChange} />
-      <br/>
-      <button type="submit" onClick={handleAutoFill}>Auto-Fill</button>
+      <br />
+      I want to sell:
+      <br />
+      <AssetAmountInput
+        name="maker"
+        onChange={handleChange}
+        onUpdateChain={swap.maker.provider.setProvider}
+      />
+      <br />
+      Deposited:
+      <DepositedAmount
+        metaSwap={swap.maker.metaSwap}
+        asset={state.makerAsset}
+      />
+      <br />
+      <br />
+      I want to buy:
+      <br />
+      {state.makerAsset && (
+        <AssetAmountInput
+          name="taker"
+          onChange={handleChange}
+          onUpdateChain={swap.taker.provider.setProvider}
+        />
+      )}
+      <br />
+      <br />
       <button type="submit">Submit</button>
+      <Json>{state}</Json>
     </form>
   )
 }

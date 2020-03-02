@@ -9,14 +9,15 @@ import Initialize from './EvmMakerInitialize'
 const style = { float: 'left', width: '50%', overflow: 'scroll' }
 
 const EvmSwapMakeController = () => {
-  const { maker, taker, ...swap } = useEvmSwapMaker()
+  const swap = useEvmSwapMaker()
+  const { maker, taker } = swap
   return (
     <>
       <div style={style}>
         <h3>Evm Maker</h3>
         {(() => {
           if (!swap.preImage) {
-            return <Initialize onInitialize={swap.initialize} />
+            return <Initialize onInitialize={swap.initialize} swap={swap} />
           }
           if (!swap.peer.channelId) {
             return 'Connecting...'

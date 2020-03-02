@@ -1,7 +1,8 @@
 import { useState } from 'react'
 
 import { usePeer } from '../hooks'
-import { bob as signer, LIGHTNING_SWAP_TYPE, EVM_SWAP_TYPE } from '../utils'
+import { LIGHTNING_SWAP_TYPE, EVM_SWAP_TYPE } from '../utils'
+import { takerSigner } from '../utils/demo-accounts'
 
 import Lightning from './lightning-swap/LightningTakerController'
 import Evm from './evm-swap/EvmTakerController'
@@ -9,7 +10,7 @@ import Json from './Json'
 
 const TakeSwap = ({ channelId }) => {
   const [swapType, setSwapType] = useState(null)
-  const peer = usePeer({ signer, channelId, autoConnect: true })
+  const peer = usePeer({ signer: takerSigner, channelId, autoConnect: true })
   peer.onMessage('swapType', setSwapType)
   if (!swapType) {
     return <Json>{peer}</Json>

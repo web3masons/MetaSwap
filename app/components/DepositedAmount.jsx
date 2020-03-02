@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const DepositedAmount = ({ metaSwap, asset, account }) => {
+const DepositedAmount = ({ metaSwap, asset }) => {
   const assetAddress = asset && asset.address
   useEffect(() => {
     if (metaSwap.address && assetAddress) {

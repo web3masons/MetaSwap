@@ -81,7 +81,7 @@ export default function useMetaSwap ({ provider, signer, address, owner }) {
     async signSwap ({
       amount,
       recipient,
-      asset = nullAddress,
+      asset = { address: nullAddress },
       preImageHash = testPreImageHash
     }) {
       const { nonce } = await actions.getAccountDetails(depositAccount)
@@ -92,9 +92,9 @@ export default function useMetaSwap ({ provider, signer, address, owner }) {
         amount,
         relayerAmount: 1,
         account: depositAccount,
-        asset,
+        asset: asset.address,
         relayerAddress: provider.wallet,
-        relayerAsset: asset,
+        relayerAsset: asset.address, // TODO make this configurble
         expirationTime: Math.floor(new Date().getTime() / 1000) + 10e8,
         relayerExpirationTime: Math.floor(new Date().getTime() / 1000) + 10e8,
         recipient
@@ -110,7 +110,7 @@ export default function useMetaSwap ({ provider, signer, address, owner }) {
     relaySwap (params) {
       actions.validateParams(params)
       const methodParams = formatParams(params)
-      return addTx(contract.swap(...methodParams), true)
+      return addTx(contract.swap(...[...methodParams, { gasLimit: 500000 }]))
     },
     listenForPreImage (preImageHash) {
       // TODO poll the chain for this preImage...

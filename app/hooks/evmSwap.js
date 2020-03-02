@@ -1,14 +1,31 @@
 import { useMyReducer, useContractSuite, usePeer } from '../hooks'
 import { useEffect } from 'react'
-import { testAddress, EVM_SWAP_TYPE, randomPreImage, nullAddress } from '../utils'
+import { testAddress, EVM_SWAP_TYPE, randomPreImage, nullAddress, chains } from '../utils'
+import {
+  makerSigner,
+  makerAdmin,
+  takerSigner,
+  takerAdmin,
+  relayer
+} from '../utils/demo-accounts'
 
 export function useEvmSwapMaker () {
   const [state, { merge, set }] = useMyReducer()
 
   // For now these are on the same chain but will be updated...
-  const maker = useContractSuite()
-  const taker = useContractSuite() // TODO populate with correct chain id etc...
-  const peer = usePeer({ signer: maker.signer, host: true })
+  const maker = useContractSuite({
+    secret: relayer.privateKey,
+    signer: makerSigner,
+    owner: makerAdmin.address
+  })
+  const taker = useContractSuite({
+    secret: relayer.privateKey,
+    // signer: takerSigner,
+    owner: takerAdmin.address
+  })
+
+  // TODO populate with correct chain id etc...
+  const peer = usePeer({ signer: makerSigner, host: true })
 
   const actions = {
     initialize ({ recipient = testAddress, makerAsset = nullAddress, makerAmount = 1, takerAsset = nullAddress, takerAmount = 2 } = {}) {
@@ -59,8 +76,16 @@ export function useEvmSwapMaker () {
 export function useEvmSwapTaker ({ peer }) {
   const [state, { merge, set }] = useMyReducer()
 
-  const maker = useContractSuite()
-  const taker = useContractSuite()
+  const maker = useContractSuite({
+    secret: relayer.privateKey,
+    // signer: makerSigner,
+    owner: makerAdmin.address
+  })
+  const taker = useContractSuite({
+    secret: relayer.privateKey,
+    signer: takerSigner,
+    owner: takerAdmin.address
+  })
 
   useEffect(() => {
     peer.send('getSwapDetails')
@@ -68,15 +93,16 @@ export function useEvmSwapTaker ({ peer }) {
 
   peer.onMessage('swapDetails', (details) => {
     // TODO parse and verify invoice
+    // TODO validate!
+    maker.provider.setProvider(chains[details.makerSwap.asset.chain])
+    taker.provider.setProvider(chains[details.takerSwap.asset.chain])
     set(details)
-    // TODO this should be a button and input
-    // actions.confirmRecipient()
   })
   peer.onMessage('signedMakerSwap', async (signedMakerSwap) => {
     // TODO validate this!
     merge({ signedMakerSwap })
     // then i sign the taker swap
-    const signedTakerSwap = await maker.metaSwap.signSwap(state.takerSwap)
+    const signedTakerSwap = await taker.metaSwap.signSwap(state.takerSwap)
     merge({ signedTakerSwap })
     peer.send('signedTakerSwap', signedTakerSwap)
     // TODO listen on chain for the preImage in case bob is evil

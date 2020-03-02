@@ -34,7 +34,7 @@ export function useLightningSwapMaker () {
     },
     async signSwap () {
       const { recipient, asset, amount } = state
-      const signedSwap = await metaSwap.signSwap({ recipient, asset: asset.address, amount })
+      const signedSwap = await metaSwap.signSwap({ recipient, asset, amount })
       merge({ signedSwap })
       peer.send('signedSwap', signedSwap)
     }
@@ -66,7 +66,8 @@ export function useLightningSwapTaker ({ peer }) {
 
   const { metaSwap, provider } = useContractSuite({
     secret: relayer.privateKey,
-    signer: takerSigner
+    signer: takerSigner,
+    owner: takerAdmin.address
   })
 
   useEffect(() => {
@@ -74,7 +75,6 @@ export function useLightningSwapTaker ({ peer }) {
   }, [])
 
   peer.onMessage('swapDetails', (details) => {
-    console.log(details.asset.chain)
     const chain = chains[details.asset.chain]
     if (!chain) {
       // show an error

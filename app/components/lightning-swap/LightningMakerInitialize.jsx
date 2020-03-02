@@ -25,7 +25,7 @@ const LightningMakerInitialize = ({ onInitialize, onUpdateChain, metaSwap }) => 
       <Json>{state}</Json>
       I want to sell:
       <br/>
-      <AssetAmountInput state={state} onChange={handleChange} onUpdateChain={onUpdateChain} />
+      <AssetAmountInput onChange={handleChange} onUpdateChain={onUpdateChain} />
       <br/>
       Deposited: <DepositedAmount metaSwap={metaSwap} asset={state.asset} />
       <br/>

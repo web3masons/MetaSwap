@@ -22,12 +22,14 @@ export default function useProvider ({ chain, secret }) {
     async addTx (promise, skipMining) {
       // TODO handle errors
       const tx = await promise
-      merge({ txs: { [tx.hash]: parseTx(tx) } })
-      const wait = async () => {
-        await tx.wait()
-        merge({ txs: { [tx.hash]: { mined: true } } })
+      if (tx) {
+        merge({ txs: { [tx.hash]: parseTx(tx) } })
+        const wait = async () => {
+          await tx.wait()
+          merge({ txs: { [tx.hash]: { mined: true } } })
+        }
+        skipMining ? wait() : await wait()
       }
-      skipMining ? wait() : await wait()
       return tx
     },
 

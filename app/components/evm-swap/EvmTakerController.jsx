@@ -34,7 +34,7 @@ const EvmSwapTakerController = ({ peer }) => {
           </>
         )
       })()}
-      <pre>{JSON.stringify(swap, null, 2)}</pre>
+      <pre>{JSON.stringify({ swap, maker, taker }, null, 2)}</pre>
     </>
   )
 }
