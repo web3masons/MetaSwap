@@ -104,7 +104,7 @@ export function useLightningSwapTaker ({ peer }) {
       const params = { ...signedSwap, preImage }
       metaSwap.validateParams(params)
       merge({ preImage })
-      const { hash: txHash } = metaSwap.relaySwap(params)
+      const { hash: txHash } = await metaSwap.relaySwap(params)
       merge({ txHash })
       peer.send('relayedTx', txHash)
     }

@@ -4,6 +4,7 @@ import InputLightningInvoice from '../InputLightningInvoice'
 import DepositedAmount from '../DepositedAmount'
 import AssetAmountInput from '../AssetAmountInput'
 import Json from '../Json'
+import InvoiceDetails from '../InvoiceDetails'
 
 const LightningMakerInitialize = ({ onInitialize, onUpdateChain, metaSwap }) => {
   const [state, setState] = useState({})
@@ -21,19 +22,17 @@ const LightningMakerInitialize = ({ onInitialize, onUpdateChain, metaSwap }) => 
   }
   // TODO validation (e.g. expires and such, also read contract!)
   return (
-    <form onSubmit={handleSubmit}>
-      <Json>{state}</Json>
-      I want to sell:
-      <br/>
-      <AssetAmountInput onChange={handleChange} onUpdateChain={onUpdateChain} />
-      <br/>
-      Deposited: <DepositedAmount metaSwap={metaSwap} asset={state.asset} />
-      <br/>
-      If this invoice gets paid:
-      <br/>
-      <InputLightningInvoice value={state.invoice} onChange={handleChange} />
-      <br />
-      <button type="submit">Submit</button>
+    <form onSubmit={handleSubmit} className="form-group">
+      <label className="form-label label-lg">I want to sell:</label>
+      <AssetAmountInput
+        onChange={handleChange}
+        onUpdateChain={onUpdateChain}
+        renderDeposited={<DepositedAmount metaSwap={metaSwap} asset={state.asset} />}
+      />
+      <label className="form-label label-lg">If this Lightning invoice gets paid:</label>
+      {!state.invoice && <InputLightningInvoice value={state.invoice} onChange={handleChange} />}
+      {state.invoice && <InvoiceDetails invoice={state.invoice} />}
+      {state.amount && state.invoice && <button className="btn btn-primary btn-full" type="submit">Create Swap</button>}
     </form>
   )
 }

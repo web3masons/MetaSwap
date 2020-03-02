@@ -10,7 +10,7 @@ const InputLightningInvoice = ({ onChange, value = {} }) => {
   }
   return (
     <>
-      <input onChange={handleChange} placeholder="Paste invoice" />
+      <textarea className="form-input input-lg" onChange={handleChange} placeholder="Paste a lightning invoice or type 'test'" />
       {value.invoice && <Json>{value}</Json>}
     </>
   )

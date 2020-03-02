@@ -16,7 +16,7 @@ app.prepare().then(() => {
   // Signalling server
   var expressPeerServer = ExpressPeerServer(server)
   // TODO only allow one connection
-  expressApp.use('/rtc', expressPeerServer)
+  expressApp.use('/peerjs', expressPeerServer)
 
   expressApp.use(handler)
   server.listen(3000)

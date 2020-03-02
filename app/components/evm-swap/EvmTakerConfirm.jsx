@@ -10,7 +10,7 @@ const EvmTakerConfirm = ({ onConfirm }) => {
     }}>
       Confirm Recipient Address:
       <input name='recipient' placeholder='Recipient Address' defaultValue={testAddress} />
-      <button type="submit">Confirm</button>
+      <button className="btn btn-primary" type="submit">Confirm</button>
     </form>
   )
 }

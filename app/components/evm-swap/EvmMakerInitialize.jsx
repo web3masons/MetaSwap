@@ -59,7 +59,7 @@ const EvmMakerInitialize = ({ onInitialize, swap }) => {
       )}
       <br />
       <br />
-      <button type="submit">Submit</button>
+      <button className="btn btn-primary" type="submit">Submit</button>
       <Json>{state}</Json>
     </form>
   )

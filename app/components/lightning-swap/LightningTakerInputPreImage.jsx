@@ -11,13 +11,12 @@ const LightningTakerInputPreImage = ({ onChange, invoice, value = {} }) => {
       onChange(validPreImage)
     }
   }
-  // handleChange({ e: { target: { value:   }}})
   return (
     <>
       <QRCode data={invoice.invoice} />
       <Json>{invoice}</Json>
       <input onChange={handleChange} placeholder="Paste preImage" />
-      <button onClick={() => handleChange({ target: { value: testInvoicePreImage } })}>Paste</button>
+      <button className="btn btn-primary" onClick={() => handleChange({ target: { value: testInvoicePreImage } })}>Paste</button>
     </>
   )
 }

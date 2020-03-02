@@ -85,7 +85,7 @@ const MetaSwapAdmin = () => {
       {/* TODO ful setup buton */}
       <ul>
         <li>
-          <button
+          <button className="btn btn-primary"
             onClick={async () => {
               await metaSwap.cooldown()
               await provider.increaseTime(6 * 60)
@@ -105,7 +105,7 @@ const MetaSwapAdmin = () => {
       </ul>
       <ul>
         <li>
-          <button
+          <button className="btn btn-primary"
             onClick={async () => {
               await metaSwap.cooldown()
               await provider.increaseTime(6 * 60)
@@ -117,7 +117,7 @@ const MetaSwapAdmin = () => {
           (Allows Withdraws and Config)
         </li>
         <li>
-          <button
+          <button className="btn btn-primary"
             onClick={async () => {
               await metaSwap.warmUp()
               metaSwap.getAccountDetails()
@@ -128,7 +128,7 @@ const MetaSwapAdmin = () => {
           (Allows Trading)
         </li>
         <li>
-          <button
+          <button className="btn btn-primary"
             onClick={async () => {
               await metaSwap.deposit(5e10)
               metaSwap.getAccountDetails()
@@ -138,7 +138,7 @@ const MetaSwapAdmin = () => {
           </button>
         </li>
         <li>
-          <button
+          <button className="btn btn-primary"
             onClick={async () => {
               await metaSwap.deposit(2e10, erc20)
               metaSwap.getAccountDetails()
@@ -148,7 +148,7 @@ const MetaSwapAdmin = () => {
           </button>
         </li>
         <li>
-          <button
+          <button className="btn btn-primary"
             onClick={async () => {
               await metaSwap.withdraw(3e6)
               metaSwap.getAccountDetails()
@@ -158,7 +158,7 @@ const MetaSwapAdmin = () => {
           </button>
         </li>
         <li>
-          <button
+          <button className="btn btn-primary"
             onClick={async () => {
               await metaSwap.withdraw(3e8, erc20)
               metaSwap.getAccountDetails()
@@ -168,7 +168,7 @@ const MetaSwapAdmin = () => {
           </button>
         </li>
         <li>
-          <button
+          <button className="btn btn-primary"
             onClick={async () => {
               await metaSwap.configureAccount(signerAddress, true)
               await provider.increaseTime(6 * 60)
@@ -182,7 +182,7 @@ const MetaSwapAdmin = () => {
       Misc:
       <ul>
         <li>
-          <button
+          <button className="btn btn-primary"
             onClick={async () => {
               await provider.send(takerAdmin.address, utils.parseEther('0.1'))
               await provider.send(relayer.address, utils.parseEther('0.1'))

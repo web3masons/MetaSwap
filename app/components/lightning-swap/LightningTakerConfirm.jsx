@@ -14,7 +14,7 @@ const LightningTakerConfirm = ({ onConfirm }) => {
         placeholder="Recipient Address"
         defaultValue={testAddress}
       />
-      <button type="submit">Confirm</button>
+      <button className="btn btn-primary" type="submit">Confirm</button>
     </form>
   )
 }

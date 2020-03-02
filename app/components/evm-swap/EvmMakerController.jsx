@@ -1,12 +1,11 @@
-import { useEffect } from 'react'
-
 import { useEvmSwapMaker } from '../../hooks'
 
 import TakeSwap from '../TakeSwap'
 import ShareChannel from '../ShareChannel'
 import Initialize from './EvmMakerInitialize'
+import { testMode } from '../../utils'
 
-const style = { float: 'left', width: '50%', overflow: 'scroll' }
+const style = testMode ? { float: 'left', width: '50%', overflow: 'scroll' } : {}
 
 const EvmSwapMakeController = () => {
   const swap = useEvmSwapMaker()
@@ -48,9 +47,11 @@ const EvmSwapMakeController = () => {
         })()}
         <pre>{JSON.stringify(swap, null, 2)}</pre>
       </div>
-      <div style={style}>
-        {swap.peer.channelId && <TakeSwap channelId={swap.peer.channelId} />}
-      </div>
+      {testMode &&
+        <div style={style}>
+          {swap.peer.channelId && <TakeSwap channelId={swap.peer.channelId} />}
+        </div>
+      }
     </>
   )
 }

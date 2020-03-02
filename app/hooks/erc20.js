@@ -1,4 +1,4 @@
-import { abi } from '../../contracts/build/contracts/ERC20Mock'
+import { abi } from '../contracts/ERC20Mock'
 import { useContract } from '../hooks'
 
 export default function useErc20 ({ provider, address }) {

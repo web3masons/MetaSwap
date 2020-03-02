@@ -1,14 +1,11 @@
-import QR from 'qrcode.react'
-
-import Json from './Json'
+import { QRCode as QR } from 'react-qr-svg'
 
 const QRCode = ({ data, type }) => {
   const code = data
   return (
-    <>
+    <div className="qr-container">
       <QR value={code} />
-      <Json>{code}</Json>
-    </>
+    </div>
   )
 }
 

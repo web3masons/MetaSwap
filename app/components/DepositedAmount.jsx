@@ -11,7 +11,12 @@ const DepositedAmount = ({ metaSwap, asset }) => {
   if (!assetAddress || !metaSwap) {
     return null
   }
-  return metaSwap.balance(assetAddress, metaSwap.depositAccount)
+  return (
+    <span className="label label-secondary my-2">
+      Deposited: {metaSwap.balance(assetAddress, metaSwap.depositAccount)}
+    </span>
+
+  )
 }
 
 export default DepositedAmount

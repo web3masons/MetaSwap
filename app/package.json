@@ -18,9 +18,10 @@
     "next-routes": "^1.4.2",
     "peer": "^0.2.10",
     "peerjs": "^1.2.0",
-    "qrcode.react": "^1.0.0",
     "react": "^16.12.0",
-    "react-dom": "^16.12.0"
+    "react-dom": "^16.12.0",
+    "react-qr-svg": "^2.2.1",
+    "spectre.css": "^0.5.8"
   },
   "devDependencies": {
     "eslint": "^6.8.0",

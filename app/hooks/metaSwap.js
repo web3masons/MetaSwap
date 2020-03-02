@@ -1,4 +1,4 @@
-import { abi } from '../../contracts/build/contracts/MetaSwap'
+import { abi } from '../contracts/MetaSwap'
 import { nullAddress, parseCall, createSignature, testPreImageHash, formatParams } from '../utils'
 import { useContract } from '../hooks'
 import { useEffect } from 'react'
@@ -110,7 +110,9 @@ export default function useMetaSwap ({ provider, signer, address, owner }) {
     relaySwap (params) {
       actions.validateParams(params)
       const methodParams = formatParams(params)
-      return addTx(contract.swap(...[...methodParams, { gasLimit: 500000 }]))
+      const tx = contract.swap(...[...methodParams, { gasLimit: 500000, gasPrice: 2000000000 }]) // gwei
+      addTx(tx)
+      return tx
     },
     listenForPreImage (preImageHash) {
       // TODO poll the chain for this preImage...

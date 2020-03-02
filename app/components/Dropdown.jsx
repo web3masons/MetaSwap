@@ -8,6 +8,7 @@ const Dropdown = ({ onChange, items, name }) => {
   }, [])
   return (
     <select
+      className="form-select select-lg"
       name={name}
       onChange={e => onChange({ target: { name, value: items[e.target.value] } })}
       defaultValue={defaultValue}

@@ -6,7 +6,7 @@ import { utils } from 'ethers'
 
 const { Peer } = isClient && require('peerjs').peerjs
 
-const peerConfig = { debug: 0, host: 'localhost', port: 3000, path: '/rtc' }
+const peerConfig = {} // : { debug: 0, host: '/' }
 
 // TODO we might want to use a different way to discover, e.g. qr codes...
 
