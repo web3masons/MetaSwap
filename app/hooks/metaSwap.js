@@ -1,9 +1,23 @@
 import { abi } from '../../contracts/build/contracts/MetaSwap'
 import { nullAddress, parseCall, createSignature, testPreImageHash, formatParams } from '../utils'
 import { useContract } from '../hooks'
+import { useEffect } from 'react'
 
-export default function useMetaSwap ({ provider, address }) {
-  const [state, { merge, tx }, contract] = useContract({ provider, address, abi })
+export default function useMetaSwap ({ provider, signer, address, owner }) {
+  const [state, { merge, addTx }, contract] = useContract({ provider, address, abi })
+
+  const providerRef = provider.getProvider().current
+  const walletRef = providerRef && providerRef
+  const messageSigner = signer || walletRef
+  const depositAccount = owner || (walletRef && walletRef.address)
+
+  useEffect(() => {
+    merge({
+      messageSigner: messageSigner && messageSigner.address,
+      txPublisher: walletRef && walletRef.address,
+      depositAccount
+    })
+  }, [walletRef, messageSigner, depositAccount])
 
   const actions = {
     async getBalance (asset = nullAddress, wallet = provider.wallet) {
@@ -23,13 +37,13 @@ export default function useMetaSwap ({ provider, address }) {
     },
 
     async depositEther (value) {
-      await tx(contract.depositEther({ value }))
+      await addTx(contract.depositEther({ value }))
       actions.getBalance()
       provider.getBalance()
     },
 
     async depositToken (tokenAddress, value) {
-      await tx(contract.depositToken(tokenAddress, value))
+      await addTx(contract.depositToken(tokenAddress, value))
       actions.getBalance(tokenAddress)
     },
 
@@ -43,7 +57,7 @@ export default function useMetaSwap ({ provider, address }) {
 
     async withdraw (value, erc20) {
       const assetAddress = (erc20 && erc20.address) || nullAddress
-      await tx(contract.withdraw(assetAddress, value))
+      await addTx(contract.withdraw(assetAddress, value))
       actions.getBalance(assetAddress)
       if (erc20) {
         erc20.getBalance()
@@ -53,18 +67,15 @@ export default function useMetaSwap ({ provider, address }) {
     },
 
     async cooldown () {
-      await tx(contract.cooldown())
-      actions.getAccountDetails()
+      return addTx(contract.cooldown())
     },
 
     async warmUp () {
-      await tx(contract.warmUp())
-      actions.getAccountDetails()
+      return addTx(contract.warmUp())
     },
 
     async configureAccount (signerWallet, done = false) {
-      await tx(contract.configureAccount(signerWallet, done))
-      actions.getAccountDetails()
+      return addTx(contract.configureAccount(signerWallet, done))
     },
 
     async signSwap ({
@@ -73,14 +84,14 @@ export default function useMetaSwap ({ provider, address }) {
       asset = nullAddress,
       preImageHash = testPreImageHash
     }) {
-      const { nonce } = await actions.getAccountDetails()
+      const { nonce } = await actions.getAccountDetails(depositAccount)
       const signedSwap = {
         contractAddress: address,
         nonce: parseInt(nonce) + 1,
         preImageHash,
         amount,
         relayerAmount: 1,
-        account: provider.wallet,
+        account: depositAccount,
         asset,
         relayerAddress: provider.wallet,
         relayerAsset: asset,
@@ -88,8 +99,7 @@ export default function useMetaSwap ({ provider, address }) {
         relayerExpirationTime: Math.floor(new Date().getTime() / 1000) + 10e8,
         recipient
       }
-      const signer = provider.getProvider().current
-      signedSwap.signature = await createSignature(signedSwap, signer)
+      signedSwap.signature = await createSignature(signedSwap, messageSigner)
       return signedSwap
     },
     validateParams (params) {
@@ -100,20 +110,22 @@ export default function useMetaSwap ({ provider, address }) {
     relaySwap (params) {
       actions.validateParams(params)
       const methodParams = formatParams(params)
-      return tx(contract.swap(...methodParams), true)
+      return addTx(contract.swap(...methodParams), true)
     },
     listenForPreImage (preImageHash) {
       // TODO poll the chain for this preImage...
     },
     balance (asset = nullAddress, account = provider.wallet) {
+      // TODO use getDeep
       return (
-        (state.balances && state.balances[account] &&
+        (state.balances &&
+          state.balances[account] &&
           state.balances[account][asset]) ||
         0
       )
     },
     accountDetail (account = provider.wallet) {
-      return (state.accountDetails && state.accountDetails[account])
+      return state.accountDetails && state.accountDetails[account]
     }
   }
 

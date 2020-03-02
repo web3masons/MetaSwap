@@ -10,13 +10,16 @@ export default function useErc20 ({ provider, address }) {
       merge({ balances: { [wallet]: balance.toString() } })
     },
     approve (recipient, amount) {
-      return tx(contract.approve(recipient, amount))
+      return addTx(contract.approve(recipient, amount))
     },
     balance (account = provider.wallet) {
       return (
         (state.balances && state.balances[account]) || '0'
       )
     }
+    // transfer (recipient, amount) {
+    //   return addTx(contract.transfer(recipient, amount))
+    // }
 
   }
 

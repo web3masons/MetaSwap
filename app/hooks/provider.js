@@ -19,7 +19,7 @@ export default function useProvider ({ chain, secret }) {
   }, [chain, secret])
 
   const actions = {
-    async tx (promise, skipMining) {
+    async addTx (promise, skipMining) {
       // TODO handle errors
       const tx = await promise
       merge({ txs: { [tx.hash]: parseTx(tx) } })
@@ -78,7 +78,7 @@ export default function useProvider ({ chain, secret }) {
     },
 
     async getTransaction (hash) {
-      actions.tx(provider.current.getTransaction(hash))
+      actions.addTx(provider.current.getTransaction(hash))
     },
 
     async getTransactionReceipt (hash) {
@@ -90,15 +90,17 @@ export default function useProvider ({ chain, secret }) {
       await provider.current.send('evm_increaseTime', [seconds])
       await provider.current.send('evm_mine')
     },
-
+    // TODO handle nonce incrementing better
     send (to, value) {
-      return actions.tx(wallet.current.sendTransaction({ to, value }), true)
+      return actions.addTx(wallet.current.sendTransaction({ to, value }))
+    },
+    // TODO replace with getDeep
+    tx (hash) {
+      return (state.txs || {})[hash]
     }
   }
 
   return {
-    // txs: {},
-    // balance: {},
     ...state,
     ...actions
   }

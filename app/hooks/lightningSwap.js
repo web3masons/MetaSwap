@@ -1,24 +1,40 @@
 import { useMyReducer, useContractSuite, usePeer } from '../hooks'
 import { useEffect } from 'react'
-import { testAddress, testPreImage, LIGHTNING_SWAP_TYPE } from '../utils'
+import { testAddress, testPreImage, LIGHTNING_SWAP_TYPE, chains } from '../utils'
 import { decodeInvoice } from '../utils/lightning'
-import { makerSigner, relayer } from '../utils/demo-accounts'
+import {
+  makerSigner,
+  makerAdmin,
+  takerSigner,
+  takerAdmin,
+  relayer
+} from '../utils/demo-accounts'
 
 export function useLightningSwapMaker () {
   const [state, { merge, set }] = useMyReducer()
 
-  const { metaSwap, provider } = useContractSuite({ secret: relayer.privateKey })
   const peer = usePeer({ signer: makerSigner, host: true })
+
+  const { metaSwap, provider } = useContractSuite({
+    secret: relayer.privateKey,
+    signer: makerSigner,
+    owner: makerAdmin.address
+  })
 
   const actions = {
     initialize ({ asset, amount, invoice }) {
-      const maker = provider.wallet
-      set({ asset, maker, amount, invoice, ready: true })
+      set({
+        asset,
+        amount,
+        invoice,
+        maker: metaSwap.depositAccount,
+        ready: true
+      })
       peer.connect()
     },
     async signSwap () {
       const { recipient, asset, amount } = state
-      const signedSwap = await metaSwap.signSwap({ recipient, asset, amount })
+      const signedSwap = await metaSwap.signSwap({ recipient, asset: asset.address, amount })
       merge({ signedSwap })
       peer.send('signedSwap', signedSwap)
     }
@@ -48,15 +64,26 @@ export function useLightningSwapMaker () {
 export function useLightningSwapTaker ({ peer }) {
   const [state, { merge, set }] = useMyReducer()
 
-  const { metaSwap, provider } = useContractSuite()
+  const { metaSwap, provider } = useContractSuite({
+    secret: relayer.privateKey,
+    signer: takerSigner
+  })
 
   useEffect(() => {
     peer.send('getSwapDetails')
   }, [])
 
   peer.onMessage('swapDetails', (details) => {
+    console.log(details.asset.chain)
+    const chain = chains[details.asset.chain]
+    if (!chain) {
+      // show an error
+      return
+    }
+    provider.setProvider(chain)
     // TODO parse and verify invoice
     const invoice = decodeInvoice(details.invoice)
+    // todo set the chain
     // TODO check account owner and signer
     set({ ...details, invoice })
     // TODO this should be a button and input
@@ -77,7 +104,7 @@ export function useLightningSwapTaker ({ peer }) {
       const params = { ...signedSwap, preImage }
       metaSwap.validateParams(params)
       merge({ preImage })
-      const { hash: txHash } = await metaSwap.relaySwap(params)
+      const { hash: txHash } = metaSwap.relaySwap(params)
       merge({ txHash })
       peer.send('relayedTx', txHash)
     }

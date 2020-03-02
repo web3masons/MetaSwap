@@ -3,12 +3,14 @@ import Json from './Json'
 
 const InputLightningInvoice = ({ onChange, value = {} }) => {
   function handleChange (e) {
-    const invoiceDetails = decodeInvoice()
-    onChange(invoiceDetails)
+    const invoiceDetails = decodeInvoice(e.target.value)
+    if (invoiceDetails) {
+      onChange(invoiceDetails)
+    }
   }
   return (
     <>
-      <input onChange={handleChange} value={value.invoice} placeholder="Paste invoice" />
+      <input onChange={handleChange} placeholder="Paste invoice" />
       {value.invoice && <Json>{value}</Json>}
     </>
   )

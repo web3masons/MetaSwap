@@ -21,8 +21,8 @@ export default function useContract ({ provider, address, abi }) {
     }
   }, [providerUrl, provider.wallet, address])
 
-  actions.tx = async (promise, skipMining) => {
-    const tx = await provider.tx(promise, true)
+  actions.addTx = async (promise, skipMining) => {
+    const tx = await provider.addTx(promise, true)
     actions.push('txs', tx.hash)
     if (!skipMining) {
       await tx.wait()

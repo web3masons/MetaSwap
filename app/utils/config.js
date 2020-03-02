@@ -11,12 +11,14 @@ export const chains = {
   },
   kovan: {
     name: 'Kovan',
+    exporer: 'https://kovan.etherscan.io/tx/',
     url: 'https://kovan.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73',
     contractAddress: metaSwap.networks['42'].address,
     tokenAddress: erc20Mock.networks['42'].address
   },
   rinkeby: {
     name: 'Rinkeby',
+    exporer: 'https://rinkeby.etherscan.io/tx/',
     url: 'https://rinkeby.infura.io/v3/7d0d81d0919f4f05b9ab6634be01ee73',
     contractAddress: metaSwap.networks['4'].address,
     tokenAddress: erc20Mock.networks['4'].address

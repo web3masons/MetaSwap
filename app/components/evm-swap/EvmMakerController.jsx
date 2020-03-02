@@ -37,10 +37,10 @@ const EvmSwapMakeController = () => {
             <>
               <div>Transactions</div>
               <pre>
-                {JSON.stringify(maker.provider.txs[swap.makerTxHash], null, 2)}
+                {JSON.stringify(maker.provider.tx(swap.makerTxHash), null, 2)}
               </pre>
               <pre>
-                {JSON.stringify(taker.provider.txs[swap.takerTxHash], null, 2)}
+                {JSON.stringify(taker.provider.tx(swap.takerTxHash), null, 2)}
               </pre>
             </>
           )

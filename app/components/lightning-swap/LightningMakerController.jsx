@@ -20,6 +20,7 @@ const LightningSwapMakeController = () => {
               <Initialize
                 onInitialize={swap.initialize}
                 onUpdateChain={swap.provider.setProvider}
+                metaSwap={swap.metaSwap}
               />
             )
           }
@@ -35,7 +36,7 @@ const LightningSwapMakeController = () => {
           if (!swap.txHash) {
             return 'Waiting invoice to be paid and transaction to be relayed...'
           }
-          return <pre>{JSON.stringify(swap.provider.txs[swap.txHash], null, 2)}</pre>
+          return <pre>{JSON.stringify(swap.provider.tx(swap.txHash), null, 2)}</pre>
         })()}
         <pre>{JSON.stringify(swap, null, 2)}</pre>
       </div>

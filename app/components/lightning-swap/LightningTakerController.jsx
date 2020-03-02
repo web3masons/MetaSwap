@@ -9,7 +9,7 @@ const LightningSwapTakerController = ({ peer }) => {
       <h3>Lightning Taker</h3>
       {(() => {
         if (!swap.recipient) {
-          return <LightningTakerConfirm onConfirm={swap.confirmRecipient} />
+          return <LightningTakerConfirm onConfirm={swap.confirmRecipient}/>
         }
         if (!swap.signedSwap) {
           return 'Waiting for maker to sign the swap...'
@@ -21,7 +21,7 @@ const LightningSwapTakerController = ({ peer }) => {
           return 'Relaying...'
         }
         return (
-          <pre>{JSON.stringify(swap.provider.txs[swap.txHash], null, 2)}</pre>
+          <pre>{JSON.stringify(swap.provider.tx(swap.txHash), null, 2)}</pre>
         )
       })()}
       <pre>{JSON.stringify(swap, null, 2)}</pre>
