@@ -25,11 +25,11 @@ This repo includes:
 
 The easiest way to see how it works is to watch this demo video:
 
-_link to video-here_
+https://youtu.be/EtT9lcJenIk
 
-A demo version of metaswap is deployed to https://metaswap.io. It has hard-coded accounts to enable easy in-person demoing on a mobile phone. It is currently only enabled for Lightning Network, Kovan and Rinkeby.
+A demo version of metaswap is deployed to https://metaswap.io/swap. It has hard-coded accounts with no security to enable easy in-person demoing on a mobile phone. It is currently only enabled for Lightning Network, Kovan and Rinkeby.
 
-### Why
+### Why?
 
 Hopefully this mechanism can inspire similar projects to improve cross chain interoperability.
 
@@ -49,6 +49,13 @@ Compared to other swap systems such as atomic swaps or submarine swaps, MetaSwap
 
 The system is quite simple, and relies on the following core process.
 
+For each swap there are 4 accounts involved:
+
+- "Deposit Account", maker/taker who deposits and can withdraw funds that are locked on chain
+- "Signer", an address that the deposit account can delegate the ability to make swaps to
+- "Recipient", any address to receive swap
+- "Relayer", to be rewarded for publishing the swap
+
 At least one side of the swap must have have deposited swappable assets in to the MetaSwap.sol contract on an EVM chain. These deposited assets will then be locked for X number of blocks (a cooldown period can be triggered before they are withdrawn again).
 
 Once the swappable funds are deposited, a swap can take place.
@@ -66,7 +73,22 @@ At this point, the `taker` knows that if the `preImage` is revealed, it can be p
 - In the case of Lightning, The `maker` provides a Lightning Invoice that will reveal the `preImage` upon payment (he generates an invoice and uses the same `preImageHash`).
 - In the case of an EVM chain, the `taker`, who has also deposited into MetaSwap.sol, signs a metatransaction with the other side of the swap using the _same_ `preImageHash` as the `maker`, knowing that the `maker` will reveal it on-chain to claim their side of the swap.
 
-This is the basic idea of MetaSwap; it's pretty similar to submarine swaps, but with metatransactions.
+The metatransaction that is revealed on-chain contains following properties along with a signature:
+
+- `address` Address of the contract itself
+- `nonce` Incrementing nonce 
+- `recipient` Where swapped funds are sent
+- `account` Maker or Taker deposit address
+- `asset` 0x0 for Ether or a token address
+- `amount` Asset of the swapped amount
+- `expiration` Timestamp of expiration date of swap
+- `relayerAddress` Address of relayer
+- `relayerAsset` Asset to reward relayer
+- `relayerAmount` Amount of relayer reward
+- `relayerExpiration` A time period that the primary relayer gets (other relayers can publish after this)
+- `preImageHash` A hash of the `preImage` that will be revealed to settle the swap
+- `signature` the above variables are concatenated, hashed, and signed
+- `preImage` The random string that can be revealed along with the signature to process a swap
 
 ### Punishment for cheating
 
@@ -82,6 +104,7 @@ This rate limit approach is pretty basic, and can certainly be improved in futur
 
 The existing version of MetaSwap is an absolute minimal proof of concept that demonstrates a happy-path scenario. There are various improvements that could be made to improve this MetaSwap reference implementation and/or additional layers to this ecosystem.
 
+- More documentation once some things are finalised
 - Good quality code and testing
 - Validation to prevent every edge case
 - Dedicated signalling server
