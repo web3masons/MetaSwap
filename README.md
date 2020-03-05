@@ -4,7 +4,7 @@ Cross-chain swaps with metatransactions
 
 ## Overview
 
-MetaSwap is a protocol that leverages metatransactions to enable instant, economically-trustless, 'gassless' swaps between multiple assets, EVM chains, and Lightning invoices.
+MetaSwap is a protocol that leverages metatransactions to enable instant, 'economically-trustless', 'gassless' swaps between multiple assets, EVM chains, and Lightning invoices.
 
 Currently, MetaSwap allows two parties to swap between any of the following:
 
@@ -49,10 +49,10 @@ Compared to other swap systems such as atomic swaps or submarine swaps, MetaSwap
 
 The system is quite simple, and relies on the following core process.
 
-For each swap there are 4 accounts involved:
+For each side of the swap, there are 4 accounts involved:
 
 - "Deposit Account", maker/taker who deposits and can withdraw funds that are locked on chain
-- "Signer", an address that the deposit account can delegate the ability to make swaps to
+- "Signer", an address that the deposit account can delegate the ability to make swaps (useful for mobile swapping)
 - "Recipient", any address to receive swap
 - "Relayer", to be rewarded for publishing the swap
 
@@ -94,11 +94,11 @@ The metatransaction that is revealed on-chain contains following properties alon
 
 But there is an obvious way to cheat this system; either the `maker` or the `taker` can simply publish a bunch of metaswaps to themselves and drain their deposited funds before the legitimate buyer has chance to take out their side of the swap.
 
-However, these is a simple way to make cheating a lot more difficult - by having a rate limit. If either side publishes too many metatransactions, then they will lose all of their funds. The current implementation of this rate limit is based on a proportion of the available funds. The default setting for this demo is 20% -- if one side tries to cheat, he will need to cheat more than 5 parties simultaneously to make a profit, and even this is not guaranteed. In future versions this can be tweaked depending on user requirements.
+There is a simple way to make cheating a lot more difficult - by having a rate limit. If either side publishes too many metatransactions, then they will lose all of their funds. The current implementation of this rate limit is based on a proportion of the available funds. The default setting for this demo is 20% -- if one side tries to cheat, he will need to cheat more than 5 parties simultaneously to make a profit, and even this is not guaranteed.
 
 This is what is meant by "economically-trustless"; if a side cheats, they risk losing their entire deposit.
 
-This rate limit approach is pretty basic, and can certainly be improved in future versions, such as the ability to submit a proof of fraud to cancel the opposite side of the swap.
+This rate limit approach is pretty basic, and can certainly be improved in future versions. It could rate limit by transaction number, and/or other parameters to make the possibility of cheating nearly zero; another mechanism could be submit a proof of fraud to cancel the opposite side of the swap.
 
 ## Improvements for future versions
 
