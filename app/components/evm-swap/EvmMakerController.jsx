@@ -1,58 +1,35 @@
 import { useEvmSwapMaker } from '../../hooks'
 
-import TakeSwap from '../TakeSwap'
 import ShareChannel from '../ShareChannel'
 import Initialize from './EvmMakerInitialize'
-import { testMode } from '../../utils'
-
-const style = testMode ? { float: 'left', width: '50%', overflow: 'scroll' } : {}
+import Info from '../Info'
+import CompleteSwap from '../CompleteSwap'
 
 const EvmSwapMakeController = () => {
   const swap = useEvmSwapMaker()
-  const { maker, taker } = swap
+  if (!swap.preImage) {
+    return <Initialize onInitialize={swap.initialize} swap={swap} />
+  }
+  if (!swap.peer.channelId) {
+    return <Info text='Creating peer to peer connection' />
+  }
+  if (!swap.peer.ready) {
+    return <ShareChannel peerId={swap.peer.id} />
+  }
+  if (!swap.makerSwap.recipient) {
+    return <Info text='Waiting for recipient to give address' />
+  }
+  if (!swap.signedTakerSwap) {
+    return <Info text='Waiting for taker to sign the taker swap' />
+  }
+  if (!swap.makerSwap.txHash) {
+    return <Info text='Waiting for the transaction to be relayed' />
+  }
   return (
-    <>
-      <div style={style}>
-        <h3>Evm Maker</h3>
-        {(() => {
-          if (!swap.preImage) {
-            return <Initialize onInitialize={swap.initialize} swap={swap} />
-          }
-          if (!swap.peer.channelId) {
-            return 'Connecting...'
-          }
-          if (!swap.peer.ready) {
-            return <ShareChannel peerId={swap.peer.id} />
-          }
-          if (!swap.makerSwap.recipient) {
-            return 'Waiting for recipient to give address...'
-          }
-          if (!swap.signedTakerSwap) {
-            return 'Waiting for taker to sign the taker swap...'
-          }
-          if (!swap.makerTxHash) {
-            return 'Waiting for the transaction to be relayed...'
-          }
-          return (
-            <>
-              <div>Transactions</div>
-              <pre>
-                {JSON.stringify(maker.provider.tx(swap.makerTxHash), null, 2)}
-              </pre>
-              <pre>
-                {JSON.stringify(taker.provider.tx(swap.takerTxHash), null, 2)}
-              </pre>
-            </>
-          )
-        })()}
-        <pre>{JSON.stringify(swap, null, 2)}</pre>
-      </div>
-      {testMode &&
-        <div style={style}>
-          {swap.peer.channelId && <TakeSwap channelId={swap.peer.channelId} />}
-        </div>
-      }
-    </>
+    <CompleteSwap
+      makerSwap={{ ...swap.maker, ...swap.makerSwap }}
+      takerSwap={{ ...swap.taker, ...swap.takerSwap }}
+    />
   )
 }
 

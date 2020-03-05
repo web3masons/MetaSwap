@@ -1,7 +1,8 @@
+import Masons from './Masons'
 const Footer = () => {
   return (
-    <div className="text-center">
-      Fork this on Github!
+    <div className="footer text-center">
+      <Masons />
     </div>
   )
 }

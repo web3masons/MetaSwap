@@ -38,6 +38,24 @@ body {
   width: auto;
 } */
 
+.swap-arrows {
+  font-size: 3em;
+}
+.take-swap {
+  margin-top: 2rem;
+}
+
+.footer img {
+  max-height: 50px;
+  opacity: 0.5;
+  margin: 20px;
+}
+
+
+
+
+
+
 
 .lds-ring {
   display: inline-block;

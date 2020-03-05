@@ -10,7 +10,7 @@ const SwapSide = ({ swap }) => {
         <h5>
           {swap.milisats / 1000} sats
           <br />
-          <small>Lightning Invoice Paid</small>
+          <small>via Lightning Invoice</small>
         </h5>
       </>
     )
@@ -22,7 +22,7 @@ const SwapSide = ({ swap }) => {
         {swap.amount} unit(s)
         <br />
         <small>
-          <a href={`${swap.provider.explorer}/${swap.txHash}`} target="_blank">Transaction Published</a>
+          {swap.txHash && <a href={`${swap.provider.explorer}/${swap.txHash}`} target="_blank">Transaction Published</a>}
         </small>
       </h5>
     </>

@@ -12,7 +12,7 @@ const DepositedAmount = ({ metaSwap, asset }) => {
     return null
   }
   return (
-    <span className="label label-secondary my-2">
+    <span className="label label-rounded label-secondary my-2">
       Deposited: {metaSwap.balance(assetAddress, metaSwap.depositAccount)}
     </span>
 

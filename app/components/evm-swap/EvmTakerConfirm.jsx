@@ -1,16 +1,30 @@
 import { testAddress } from '../../utils'
+import SwapOffer from '../SwapOffer'
 
-// TODO dry this out?
-
-const EvmTakerConfirm = ({ onConfirm }) => {
+const EvmTakerConfirm = ({ maker, taker, swap }) => {
   return (
-    <form onSubmit={(e) => {
-      e.preventDefault()
-      onConfirm({ recipient: e.target.recipient.value })
-    }}>
-      Confirm Recipient Address:
-      <input name='recipient' placeholder='Recipient Address' defaultValue={testAddress} />
-      <button className="btn btn-primary" type="submit">Confirm</button>
+    <form
+      className="form-group"
+      onSubmit={e => {
+        e.preventDefault()
+        swap.confirmRecipient({ recipient: e.target.recipient.value })
+      }}
+    >
+      <SwapOffer makerSwap={maker} takerSwap={taker} />
+      <br />
+      <h4 className="text-center">Looks Good?</h4>
+      <label className="form-label label-lg text-center">
+        Confirm Recipient Address:
+      </label>
+      <input
+        className="form-input input-lg"
+        name="recipient"
+        placeholder="Recipient Address"
+        defaultValue={testAddress}
+      />
+      <button className="btn btn-primary btn-full" type="submit">
+        Confirm
+      </button>
     </form>
   )
 }

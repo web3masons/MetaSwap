@@ -63,10 +63,10 @@ export function useEvmSwapMaker () {
     peer.send('preImage', preImage)
     // also relay the preImage to both chains
     const { hash: makerTxHash } = await maker.metaSwap.relaySwap({ ...signedMakerSwap, preImage })
-    merge({ makerTxHash })
+    merge({ makerSwap: { txHash: makerTxHash } })
     peer.send('relayedTx', { makerTxHash })
     const { hash: takerTxHash } = await taker.metaSwap.relaySwap({ ...signedTakerSwap, preImage })
-    merge({ takerTxHash })
+    merge({ takerSwap: { txHash: takerTxHash } })
     peer.send('relayedTx', { takerTxHash })
   })
 
@@ -110,11 +110,11 @@ export function useEvmSwapTaker ({ peer }) {
   peer.onMessage('relayedTx', async ({ makerTxHash, takerTxHash }) => {
     if (makerTxHash) {
       await maker.provider.getTransaction(makerTxHash)
-      merge({ makerTxHash })
+      merge({ makerSwap: { txHash: makerTxHash } })
     }
     if (takerTxHash) {
       await taker.provider.getTransaction(takerTxHash)
-      merge({ takerTxHash })
+      merge({ takerSwap: { txHash: takerTxHash } })
     }
   })
   peer.onMessage('preImage', (preImage) => merge({ preImage }))

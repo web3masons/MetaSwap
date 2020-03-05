@@ -22,34 +22,22 @@ const EvmMakerInitialize = ({ onInitialize, swap }) => {
   }
   // TODO validation (e.g. expires and such, also read contract!)
   return (
-    <form onSubmit={handleSubmit}>
-      Recipient address:
-      <br/>
-      <input
-        name="recipient"
-        value={state.recipient}
-        placeholder="Recipient"
-        onChange={(e) => handleChange({ target: { name: e.target.name, value: testAddress } })}
-      />
-      <br />
-      <br />
-      I want to sell:
-      <br />
+    <form onSubmit={handleSubmit} className="form-group">
+      <label className="form-label label-lg">I want to sell:</label>
       <AssetAmountInput
         name="maker"
         onChange={handleChange}
         onUpdateChain={swap.maker.provider.setProvider}
+        renderDeposited={
+          <DepositedAmount
+            metaSwap={swap.maker.metaSwap}
+            asset={state.makerAsset}
+          />
+        }
       />
-      <br />
-      Deposited:
-      <DepositedAmount
-        metaSwap={swap.maker.metaSwap}
-        asset={state.makerAsset}
-      />
-      <br />
-      <br />
-      I want to buy:
-      <br />
+      <label className="form-label label-lg">
+        I want to buy:
+      </label>
       {state.makerAsset && (
         <AssetAmountInput
           name="taker"
@@ -58,9 +46,21 @@ const EvmMakerInitialize = ({ onInitialize, swap }) => {
         />
       )}
       <br />
-      <br />
-      <button className="btn btn-primary" type="submit">Submit</button>
-      <Json>{state}</Json>
+      <label className="form-label label-lg">
+        I want my purchase to be sent to this address:
+      </label>
+      <input
+        name="recipient"
+        className="form-input input-lg"
+        value={state.recipient}
+        placeholder="Recipient"
+        onChange={e =>
+          handleChange({ target: { name: e.target.name, value: testAddress } })
+        }
+      />
+      <button className="btn btn-primary btn-full" type="submit">
+        Create Swap
+      </button>
     </form>
   )
 }

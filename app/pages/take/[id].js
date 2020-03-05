@@ -4,7 +4,11 @@ import TakeSwap from '../../components/TakeSwap'
 const Swap = () => {
   const router = useRouter()
   const { id } = router.query
-  return <TakeSwap channelId={id} />
+  return (
+    <div className="swap-contents">
+      <TakeSwap channelId={id} />
+    </div>
+  )
 }
 
 export default Swap

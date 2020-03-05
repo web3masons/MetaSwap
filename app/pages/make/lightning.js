@@ -3,8 +3,10 @@ import MakeLightningSwap from '../../components/lightning-swap/LightningMakerCon
 
 const LightningMaker = () => (
   <>
-    <MakeMenu />
-    <MakeLightningSwap />
+    <MakeMenu active="lightning" />
+    <div className="swap-contents">
+      <MakeLightningSwap />
+    </div>
   </>
 )
 

@@ -3,8 +3,10 @@ import MakeEvmSwap from '../../components/evm-swap/EvmMakerController'
 
 const EvmMaker = () => (
   <>
-    <MakeMenu />
-    <MakeEvmSwap />
+    <MakeMenu active="evm" />
+    <div className="swap-contents">
+      <MakeEvmSwap />
+    </div>
   </>
 )
 
