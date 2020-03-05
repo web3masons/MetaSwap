@@ -17,7 +17,7 @@ const LightningTakerInputPreImage = ({ onChange, invoice, value = {} }) => {
         After payment, you must copy the preImage into the input box below!
       </span>
       <br />
-      <a href={`lightning://${invoice.invoice}`}>
+      <a href={`lightning:${invoice.invoice}`}>
         <QRCode data={invoice.invoice} />
         Scan or click the QR code or to pay.
       </a>
