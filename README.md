@@ -66,8 +66,6 @@ Once the swappable funds are deposited, a swap can take place.
 - The `taker` agrees to the swap by responding with a `recipient` address
 - The `maker` creates and shares a signed metatransaction that will send the funds to the `taker` if the `preImage` is revealed on-chain
 
-See the `swap` function in Metaswap.sol to see specifics on how this metatransaction is crafted.
-
 At this point, the `taker` knows that if the `preImage` is revealed, it can be published along with the `maker`s metatransaction to claim this side of the swap. So how can `taker` convince the `maker` to reveal the `preImage`?
 
 - In the case of Lightning, The `maker` provides a Lightning Invoice that will reveal the `preImage` upon payment (he generates an invoice and uses the same `preImageHash`).
@@ -89,6 +87,8 @@ The metatransaction that is revealed on-chain contains following properties alon
 - `preImageHash` A hash of the `preImage` that will be revealed to settle the swap
 - `signature` the above variables are concatenated, hashed, and signed
 - `preImage` The random string that can be revealed along with the signature to process a swap
+
+See the `swap` function in Metaswap.sol to see specifics on how this metatransaction is crafted.
 
 ### Punishment for cheating
 
