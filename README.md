@@ -11,7 +11,8 @@ Currently, MetaSwap allows two parties to swap between any of the following:
 - Lightning Network
 - Any EVM chain base coin (ETH, ETC, RSK, TRX, etc.)
 - Any ERC20 token on any of these chains
-- Potentially any other other asset (such as NFTs or other token standards)
+
+Potentially, it supports any other other asset (such as NFTs or other token standards).
 
 Right now **MetaSwap is just a technical demo** that demonstrates an absolutely minimal proof of concept implementation of the protocol and a basic UI to help understand this flow. MetaSwap was built for fun as a side project, so do not expect production level attention to detail, code quality or security guarantees.
 
@@ -22,11 +23,11 @@ This repo includes:
 
 ### Demo
 
-A demo version of metaswap is deployed to https://metaswap.io. It has hard-coded accounts to enable easy in-person demoing on a mobile phone. It is currently only enabled for Lightning Network, Kovan and Rinkeby.
-
-The best way to see how it works is to watch this demo video:
+The easiest way to see how it works is to watch this demo video:
 
 _link to video-here_
+
+A demo version of metaswap is deployed to https://metaswap.io. It has hard-coded accounts to enable easy in-person demoing on a mobile phone. It is currently only enabled for Lightning Network, Kovan and Rinkeby.
 
 ### Why
 
@@ -60,12 +61,12 @@ Once the swappable funds are deposited, a swap can take place.
 
 See the `swap` function in Metaswap.sol to see specifics on how this metatransaction is crafted.
 
-At this point, the `taker` knows that if the `preImage` is revealed, it can be published along with the `maker`s metatransaction to claim this side of the swap. So how can the `taker` be convinced to reveal the `preImage`?
+At this point, the `taker` knows that if the `preImage` is revealed, it can be published along with the `maker`s metatransaction to claim this side of the swap. So how can `taker` convince the `maker` to reveal the `preImage`?
 
 - In the case of Lightning, The `maker` provides a Lightning Invoice that will reveal the `preImage` upon payment (he generates an invoice and uses the same `preImageHash`).
 - In the case of an EVM chain, the `taker`, who has also deposited into MetaSwap.sol, signs a metatransaction with the other side of the swap using the _same_ `preImageHash` as the `maker`, knowing that the `maker` will reveal it on-chain to claim their side of the swap.
 
-This is the basic idea of MetaTransactions; it's pretty similar to submarine swaps.
+This is the basic idea of MetaSwap; it's pretty similar to submarine swaps, but with metatransactions.
 
 ### Punishment for cheating
 
@@ -83,6 +84,8 @@ The existing version of MetaSwap is an absolute minimal proof of concept that de
 
 - Good quality code and testing
 - Validation to prevent every edge case
+- Dedicated signalling server
+- Add additional networks; Ethereum, Etheruem Classic, Rootstock, Tron, etc.
 - Better punishment systems
 - Ability to submit a proof of fraud to cancel the opposite side of the swap
 - Relayer commitments and punishment for not relaying
