@@ -19,6 +19,4 @@
     "ganache": "ganache-cli -m 'vanish fire cage artwork upon heart endorse web initial rain gown wear'",
     "migrate-ganache": "truffle migrate --network development --reset"
   },
-  "author": "",
-  "license": "ISC"
 }

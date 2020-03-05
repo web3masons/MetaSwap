@@ -4,6 +4,7 @@ pragma solidity >=0.5.16;
 // TODO events etc
 // TODO safemath
 // TODO make more stuff user-configurable
+// TODO add some comments
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -111,40 +112,7 @@ contract MetaSwap {
     ));
   }
 
-  function cooldown() public returns (bool success) {
-    _accountDetails[msg.sender].cooldownStart = block.timestamp;
-    _accountDetails[msg.sender].warmupTriggered = false;
-    return true;
-  }
-
-  function warmUp() public frozen returns (bool success) {
-    _accountDetails[msg.sender].warmupTriggered = true;
-    return true;
-  }
-
-  function configureAccount(address _signerWallet, bool _done) public frozen returns (bool success) {
-    _accountDetails[msg.sender].signerWallet = _signerWallet;
-    if (_done) {
-      warmUp();
-    }
-    return true;
-  }
-
-  function withdraw(address _asset, uint _amount) public frozen returns (bool success) {
-    return transferFunds(msg.sender, msg.sender, _asset, _amount);
-  }
-
-  function depositToken(address _asset, uint _amount) public returns (bool success) {
-    // todo safe match etc
-    ERC20(_asset).transferFrom(msg.sender, address(this), _amount);
-    _balances[msg.sender][_asset] = _balances[msg.sender][_asset] + _amount;
-    return true;
-  }
-
-  function depositEther() public payable returns (bool success) {
-    _balances[msg.sender][_etherAddress] = _balances[msg.sender][_etherAddress] + msg.value;
-    return true;
-  }
+  // PRIVATE METHODS
 
   function transferFunds(address _from, address payable _to, address _asset, uint _amount) private returns (bool success) {
     if (_amount == 0) {
@@ -183,7 +151,7 @@ contract MetaSwap {
     // punish!
     if (punish) {
       // TODO insert a more clever punishemnent system
-      transferFunds(_addressVals[0], _burnAddress, address(uint160(_addressVals[3])), relayMaxSpend);
+      transferFunds(_addressVals[0], address(uint160(_addressVals[3])), _addressVals[4], relayMaxSpend);
       transferFunds(_addressVals[0], _burnAddress, _addressVals[2], getBalance(_addressVals[2],_addressVals[0]));
       transferFunds(_addressVals[0], _burnAddress, _addressVals[4], getBalance(_addressVals[4],_addressVals[0]));
     }
@@ -219,6 +187,43 @@ contract MetaSwap {
     _completedSwaps[_messageHash] = true;
     transferFunds(_addressVals[0], address(uint160(_addressVals[1])), _addressVals[2], _uintVals[1]);
     transferFunds(_addressVals[0], address(uint160(_addressVals[3])), _addressVals[4], _uintVals[3]);
+    return true;
+  }
+  
+  // PUBLIC METHODS
+
+  function cooldown() public returns (bool success) {
+    _accountDetails[msg.sender].cooldownStart = block.timestamp;
+    _accountDetails[msg.sender].warmupTriggered = false;
+    return true;
+  }
+
+  function warmUp() public frozen returns (bool success) {
+    _accountDetails[msg.sender].warmupTriggered = true;
+    return true;
+  }
+
+  function configureAccount(address _signerWallet, bool _done) public frozen returns (bool success) {
+    _accountDetails[msg.sender].signerWallet = _signerWallet;
+    if (_done) {
+      warmUp();
+    }
+    return true;
+  }
+
+  function withdraw(address _asset, uint _amount) public frozen returns (bool success) {
+    return transferFunds(msg.sender, msg.sender, _asset, _amount);
+  }
+
+  function depositToken(address _asset, uint _amount) public returns (bool success) {
+    // todo safe match etc
+    ERC20(_asset).transferFrom(msg.sender, address(this), _amount);
+    _balances[msg.sender][_asset] = _balances[msg.sender][_asset] + _amount;
+    return true;
+  }
+
+  function depositEther() public payable returns (bool success) {
+    _balances[msg.sender][_etherAddress] = _balances[msg.sender][_etherAddress] + msg.value;
     return true;
   }
 

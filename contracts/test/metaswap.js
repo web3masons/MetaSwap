@@ -14,7 +14,7 @@ const examplePreImage = "0x561c9f2cc0e720388ff4e57611e7bce3d0b3d5b44563b15486646
 const examplePreImageHash = "0x99fdc2e2d58d8e772cd819bd3ca41bbca56cc36dfc07e4bc97d7ed14bf2d2288";
 const testPk = "0x0123456789012345678901234567890123456789012345678901234567890123";
 const wallet = new ethers.Wallet(testPk);
-const burner = wallet.address;
+const signer = wallet.address;
 
 const waitFor = async n => {
   await Promise.all(
@@ -64,8 +64,7 @@ contract('MetaSwap', (accounts) => {
     it('should be configured correctly', async () => {
       const metaSwap = await MetaSwap.deployed();
       const res = await metaSwap.getContractDetails.call();
-      assert.equal(res.claimWindow, 20);
-      assert.equal(res.cooldownBuffer, 8);
+      assert.equal(res.cooldownTime, 5 * 60);
       assert.equal(res.maximumSpend, 5);
       assert.equal(res.etherAddress, nullAddress);
       assert.equal(res.burnAddress, burnAddress);
@@ -80,14 +79,14 @@ contract('MetaSwap', (accounts) => {
       const value = 10;
       await metaSwap.depositEther({ value });
       assert.equal(await web3.eth.getBalance(metaSwap.address), value, "ether was not received in contract");
-      assert.equal(await metaSwap.getBalance.call(accounts[0], nullAddress), value, "deposit was not credited");
+      assert.equal(await metaSwap.getBalance.call(nullAddress, accounts[0]), value, "deposit was not credited");
     });
     it('should accept token deposits', async() => {
       const tokens = 50;
       const erc20 = await ERC20.new(accounts[0], tokens);
       await erc20.approve(metaSwap.address, tokens);
       await metaSwap.depositToken(erc20.address, tokens);
-      assert.equal(await metaSwap.getBalance.call(accounts[0], erc20.address), tokens, "deposit was not credited");
+      assert.equal(await metaSwap.getBalance.call(erc20.address, accounts[0]), tokens, "deposit was not credited");
     });
   })
   describe("swap", () => {
@@ -95,10 +94,10 @@ contract('MetaSwap', (accounts) => {
     beforeEach(async() => {
       recipient = randomAddress();
       metaSwap = await MetaSwap.new();
-      await metaSwap.cooldown();
-      await waitFor(30);
-      await metaSwap.configureAccount(burner, true);
-      currentBlock = await web3.eth.getBlockNumber();
+      // await metaSwap.cooldown();
+      // await waitFor(6 * 60);
+      await metaSwap.configureAccount(signer, true);
+      expires = 999999999999
       params = {
         preImageHash: examplePreImageHash,
         preImage: examplePreImage,
@@ -110,8 +109,8 @@ contract('MetaSwap', (accounts) => {
         relayerAddress: accounts[1],
         relayerAsset: nullAddress,
         contractAddress: metaSwap.address,
-        expirationTime: currentBlock + 20,
-        relayerExpirationTime: currentBlock + 5,
+        expirationTime: expires + 20,
+        relayerExpirationTime: expires + 5,
         recipient: randomAddress(),
       }
     });
