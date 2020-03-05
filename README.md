@@ -27,7 +27,7 @@ The easiest way to see how it works is to watch this demo video:
 
 https://youtu.be/EtT9lcJenIk
 
-A demo version of metaswap is deployed to https://metaswap.io/swap. It has hard-coded accounts with no security to enable easy in-person demoing on a mobile phone. It is currently only enabled for Lightning Network, Kovan and Rinkeby.
+A demo version of metaswap is deployed to https://metaswap.io/make. It has hard-coded accounts with no security to enable easy in-person demoing on a mobile phone. It is currently only enabled for Lightning Network, Kovan and Rinkeby.
 
 ### Why?
 
