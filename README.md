@@ -37,7 +37,6 @@ Hopefully this mechanism can inspire similar projects to improve cross chain int
 
 Compared to other swap systems such as atomic swaps or submarine swaps, MetaSwaps have some benefits:
 
-- No servers are required; the whole thing is completable with pure javascript in browser
 - Users don't need any existing assets on the chain they wish to on-ramp into
 - Swaps are FAST; they are 'settled' off-chain, so from the user's point of view they can happen instantly
 - Only a single transaction per asset per swap is required; less gas is consumed overall
