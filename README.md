@@ -2,6 +2,10 @@
 
 Cross-chain swaps with metatransactions
 
+![metaswap](./basics.png)
+
+The is the most basic possible overview of a Metaswap. Read on to find out implementation details.
+
 ## Overview
 
 MetaSwap is a protocol that leverages metatransactions to enable instant, 'economically-trustless', 'gassless' swaps between multiple assets, EVM chains, and Lightning invoices.
@@ -37,7 +41,6 @@ Hopefully this mechanism can inspire similar projects to improve cross chain int
 
 Compared to other swap systems such as atomic swaps or submarine swaps, MetaSwaps have some benefits:
 
-- No servers are required; the whole thing is completable with pure javascript in browser
 - Users don't need any existing assets on the chain they wish to on-ramp into
 - Swaps are FAST; they are 'settled' off-chain, so from the user's point of view they can happen instantly
 - Only a single transaction per asset per swap is required; less gas is consumed overall
@@ -57,6 +60,8 @@ For each side of the swap, there are 4 accounts involved:
 - "Relayer", to be rewarded for publishing the swap
 
 At least one side of the swap must have have deposited swappable assets in to the MetaSwap.sol contract on an EVM chain. These deposited assets will then be locked for X number of blocks (a cooldown period can be triggered before they are withdrawn again).
+
+The current demo implements communication between parties via WebRTC, with messages encryped using their signer addresses.
 
 Once the swappable funds are deposited, a swap can take place.
 
