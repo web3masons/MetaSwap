@@ -1,3 +1,5 @@
+<div align="center">
+
 # 🧬 MetaSwap
 
 Cross-chain swaps with metatransactions
@@ -9,6 +11,7 @@ To kick things off, here is a diagram of the most basic possible Metaswap.
 ![metaswap](./basics2.png)
 
 By now I hope you have questions, and I hope that this repo has answers.
+</div>
 
 ## Overview
 
