@@ -2,7 +2,7 @@
 
 Cross-chain swaps with metatransactions
 
-![metaswap](./basics.png)
+![metaswap](./basics2.png)
 
 The is the most basic possible overview of a Metaswap. Read on to find out implementation details.
 
